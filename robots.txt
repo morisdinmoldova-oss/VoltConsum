@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://morisdinmoldova-oss.github.io/VoltConsum/sitemap.xml

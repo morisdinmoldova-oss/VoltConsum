@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#07110f">
+  <meta name="robots" content="index, follow, max-image-preview:large">
+  <meta name="description" content="VoltConsum este aplicația energetică pentru Moldova: calculează consumul și costurile în MDL, estimează producția solară după prognoza live și găsește surse oficiale.">
+  <meta name="keywords" content="VoltConsum, calculator consum energie, consum electric Moldova, cost energie MDL, calculator panouri solare, prognoză solară, eficiență energetică, Chișinău">
+  <meta name="author" content="VoltConsum">
+  <meta name="application-name" content="VoltConsum">
+  <meta property="og:locale" content="ro_MD">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://morisdinmoldova-oss.github.io/VoltConsum/">
+  <link rel="canonical" href="https://morisdinmoldova-oss.github.io/VoltConsum/">
+  <meta property="og:site_name" content="VoltConsum">
+  <meta property="og:title" content="VoltConsum — Calculator de consum și energie solară în Moldova">
+  <meta property="og:description" content="Calculează consumul electric și costurile în MDL, urmărește prognoza meteo live și estimează producția fotovoltaică pentru locuința ta.">
+  <meta property="og:image" content="https://morisdinmoldova-oss.github.io/VoltConsum/assets/solar-panels-landscape.svg">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="VoltConsum — Energie pentru Republica Moldova">
+  <meta name="twitter:description" content="Calculator de consum electric, costuri în MDL și prognoză solară live pentru Moldova.">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <title>VoltConsum — Calculator de consum și energie solară în Moldova</title>
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "VoltConsum",
+      "applicationCategory": "UtilitiesApplication",
+      "operatingSystem": "Any",
+      "inLanguage": ["ro-MD", "ru", "en"],
+      "description": "Aplicație energetică pentru Republica Moldova: calculator de consum și costuri în MDL, prognoză meteo live și estimare fotovoltaică."
+    }
+  </script>
+  <script>try{const savedTheme=localStorage.getItem("voltconsum.theme");if(savedTheme==="light"||savedTheme==="dark")document.documentElement.dataset.theme=savedTheme}catch(error){}</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=20261004-13">
+  <link rel="stylesheet" href="theme.css?v=20261004-25">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js" defer></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js" defer></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js" defer></script>
+  <script src="firebase-config.js?v=20261004-2" defer></script>
+  <script src="i18n.js?v=20261004-14" defer></script>
+  <script src="app.js?v=20261004-18" defer></script>
+</head>
+<body>
+  <main class="auth-screen" id="auth-screen">
+    <div class="auth-backdrop-grid" aria-hidden="true"></div>
+    <section class="auth-card" aria-labelledby="auth-title">
+      <div class="brand auth-brand">
+        <span class="brand-mark"><svg viewBox="0 0 36 36" aria-hidden="true"><path d="M20.6 3.8 8.2 20.1h8.1l-1 12.1 12.5-17h-8.2l1-11.4Z" fill="currentColor"/></svg></span>
+        <span class="brand-name">VoltConsum<span>.</span><small>ENERGY INTELLIGENCE</small></span>
+      </div>
+      <div class="auth-toolbar">
+        <label class="language-picker"><span class="visually-hidden">Limba</span><select data-language-select aria-label="Limba"><option value="ro">Română</option><option value="ru">Русский</option><option value="en">English</option></select></label>
+        <button class="theme-toggle" id="auth-theme-toggle" type="button" aria-label="Schimbă tema">☼ <span>Tema deschisă</span></button>
+      </div>
+      <div class="auth-orbit orbit-one" aria-hidden="true"></div>
+      <div class="auth-orbit orbit-two" aria-hidden="true"></div>
+      <div class="auth-kicker"><span></span> ENERGIA TA, ÎN SIGURANȚĂ</div>
+      <h1 id="auth-title">Bine ai revenit.</h1>
+      <p class="auth-intro" id="auth-intro">Conectează-te pentru a accesa spațiul tău energetic.</p>
+      <div class="auth-tabs" role="tablist" aria-label="Metoda de autentificare">
+        <button class="auth-tab active" id="signin-tab" type="button" role="tab" aria-selected="true">Autentificare</button>
+        <button class="auth-tab" id="signup-tab" type="button" role="tab" aria-selected="false">Creează cont</button>
+      </div>
+      <form id="auth-form" class="auth-form">
+        <label for="auth-email">Adresă de email</label>
+        <input id="auth-email" name="email" type="email" autocomplete="email" placeholder="nume@exemplu.md" maxlength="254" required>
+        <label for="auth-password">Parolă</label>
+        <input id="auth-password" name="password" type="password" autocomplete="current-password" placeholder="Introdu parola" minlength="8" maxlength="128" required>
+        <div class="password-hint" id="password-hint">Parola trebuie să aibă cel puțin 8 caractere.</div>
+        <label class="confirm-password-label" for="auth-password-confirm" hidden>Confirmă parola</label>
+        <input id="auth-password-confirm" name="passwordConfirm" type="password" autocomplete="new-password" placeholder="Reintrodu parola" minlength="8" maxlength="128" hidden>
+        <p class="auth-error" id="auth-error" role="alert" aria-live="polite"></p>
+        <button class="button button-primary auth-submit" id="auth-submit" type="submit">Conectează-te <span>→</span></button>
+      </form>
+      <div class="auth-separator social-auth-separator"><span></span><small>Conectează-te rapid cu</small><span></span></div>
+      <div class="social-auth-buttons">
+        <button class="button social-auth-button" id="google-login" type="button">
+          <svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#4285F4" d="M43.6 24.5c0-1.4-.1-2.8-.4-4.1H24v7.8h11a9.4 9.4 0 0 1-4.1 6.2v5.1h6.6c3.9-3.6 6.1-8.9 6.1-15Z"/><path fill="#34A853" d="M24 44c5.5 0 10.1-1.8 13.5-4.8l-6.6-5.1c-1.8 1.2-4 2-6.9 2-5.3 0-9.8-3.6-11.4-8.4H5.8v5.3A20 20 0 0 0 24 44Z"/><path fill="#FBBC05" d="M12.6 27.7a12 12 0 0 1 0-7.4V15H5.8a20 20 0 0 0 0 18l6.8-5.3Z"/><path fill="#EA4335" d="M24 11.9c3 0 5.7 1 7.8 3.1l5.8-5.8C34.1 5.9 29.5 4 24 4A20 20 0 0 0 5.8 15l6.8 5.3c1.6-4.8 6.1-8.4 11.4-8.4Z"/></svg>
+          <span>Continuă cu Google</span>
+        </button>
+        <button class="button social-auth-button" id="facebook-login" type="button" hidden style="display:none">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M24 12a12 12 0 1 0-13.875 11.85v-8.38H7.078V12h3.047V9.356c0-3.007 1.792-4.669 4.533-4.669 1.313 0 2.686.235 2.686.235v2.953h-1.513c-1.49 0-1.956.925-1.956 1.874V12h3.328l-.532 3.47h-2.796v8.38A12.002 12.002 0 0 0 24 12Z"/></svg>
+          <span>Continuă cu Facebook</span>
+        </button>
+      </div>
+      <div class="auth-separator"><span></span><small>sau continuă fără cont</small><span></span></div>
+      <button class="button guest-button" id="guest-login" type="button"><span>◉</span><span id="guest-login-label">Intră ca oaspete / demo</span></button>
+      <p class="guest-mode-note" id="guest-mode-note" role="note"></p>
+      <div class="auth-disclaimer"><span>◈</span><p id="auth-disclaimer-copy">Autentificarea prin email, Google, Facebook și guest este gestionată de Firebase Authentication. Datele calculatorului VoltConsum rămân locale în acest browser.</p></div>
+    </section>
+    <div class="auth-footer"><span>VOLTCONSUM · ENERGY INTELLIGENCE</span><span>ACCES SECURIZAT <i></i></span><span class="background-photo-credit">Fundal: <a href="https://commons.wikimedia.org/wiki/File:Electricity_pylons,_sunset_02.jpg" target="_blank" rel="noopener noreferrer">„Electricity pylons, sunset 02” — Novoklimov</a> · <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">CC BY 4.0</a></span></div>
+  </main>
+  <div class="app-shell" id="protected-app" aria-hidden="true" inert hidden>
+    <aside class="sidebar" id="sidebar">
+      <a class="brand" href="#overview" aria-label="VoltConsum, pagina principală">
+        <span class="brand-mark"><svg viewBox="0 0 36 36" aria-hidden="true"><path d="M20.6 3.8 8.2 20.1h8.1l-1 12.1 12.5-17h-8.2l1-11.4Z" fill="currentColor"/></svg></span>
+        <span class="brand-name">VoltConsum<span>.</span><small>ENERGY INTELLIGENCE</small></span>
+      </a>
+      <div class="nav-label">SPAȚIUL TĂU</div>
+      <nav class="main-nav" aria-label="Navigare principală">
+        <a class="nav-link active" href="#overview"><span class="nav-icon">⌂</span> Privire de ansamblu</a>
+        <a class="nav-link" href="#tracker"><span class="nav-icon">◫</span> Monitor consum <span class="nav-count" id="appliance-count">0</span></a>
+        <a class="nav-link" href="#solar"><span class="nav-icon">☼</span> Energie solară</a>
+        <a class="nav-link" href="#weather"><span class="nav-icon">◌</span> Vreme & producție <span class="nav-dot"></span></a>
+        <a class="nav-link" href="#electricians"><span class="nav-icon">⌁</span> Electricieni</a>
+        <a class="nav-link" href="#news"><span class="nav-icon">▤</span> Noutăți</a>
+        <a class="nav-link" href="#resources"><span class="nav-icon">⌘</span> Ghiduri & calculatoare</a>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="support-card">
+          <div class="support-icon">✳</div>
+          <div><strong>Un pas spre eficiență</strong><p>Fiecare kWh contează.</p></div>
+          <a href="#savings" aria-label="Vezi cum poți economisi">↗</a>
+        </div>
+        <div class="profile">
+          <div class="profile-avatar">VC</div>
+          <div class="profile-copy"><strong>Vizitator</strong><span>Acces public</span></div>
+          <button class="icon-button profile-menu" aria-label="Informații profil">···</button>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main-content" id="overview">
+      <header class="topbar">
+        <button class="icon-button menu-toggle" id="menu-toggle" aria-label="Deschide meniul" aria-expanded="false">☰</button>
+        <div class="breadcrumb">Spațiul meu <span>/</span> <strong>Privire de ansamblu</strong></div>
+        <div class="topbar-actions">
+          <div class="live-indicator"><span></span> Sistem activ</div>
+          <span class="topbar-divider"></span>
+          <label class="mode-toggle" for="engineer-mode"><span class="mode-simple-label">Simplu</span><input type="checkbox" id="engineer-mode" aria-label="Mod simplu sau tehnic"><span class="toggle-track"><span></span></span><span class="mode-pro-label">Tehnolog</span></label>
+          <button class="icon-button notifications" id="notifications-button" aria-label="Notificări">♧</button>
+          <div class="profile-avatar top-avatar">VC</div>
+          <label class="language-picker app-language-picker"><span class="visually-hidden">Limba</span><select data-language-select aria-label="Limba"><option value="ro">Română</option><option value="ru">Русский</option><option value="en">English</option></select></label>
+          <button class="theme-toggle app-theme-toggle" id="app-theme-toggle" type="button" aria-label="Schimbă tema">☼ <span>Tema deschisă</span></button>
+          <button class="account-button" id="account-button" type="button" title="Deconectează-te">Deconectare <span>↗</span></button>
+        </div>
+      </header>
+
+      <div class="page-wrap">
+        <section class="welcome-row">
+          <div>
+            <div class="eyebrow"><span class="eyebrow-line"></span> <span id="local-date">ASTĂZI</span></div>
+            <h1>Bună dimineața, <span id="welcome-name">Vizitator</span> <span class="wave">✳</span></h1>
+            <p class="welcome-subtitle">Iată cum arată energia ta astăzi.</p>
+          </div>
+          <div class="export-actions"><button class="button button-outline" id="export-pdf"><span>↗</span> Exportă PDF</button><button class="button button-outline" id="export-json"><span>↓</span> JSON</button></div>
+        </section>
+
+        <section class="metrics-grid" aria-label="Indicatori energetici">
+          <article class="metric-card">
+            <div class="metric-top"><span>CONSUM AZI</span><span class="metric-icon icon-green">⌁</span></div>
+            <div class="metric-value"><strong id="today-kwh">8,42</strong><span>kWh</span></div>
+            <div class="metric-foot"><span>calculat din aparate</span><button class="metric-edit-button" id="edit-consumption-metric" type="button" aria-label="Modifică aparatele și consumul calculat">Editează ↓</button></div>
+          </article>
+          <article class="metric-card">
+            <div class="metric-top"><span>COST ESTIMAT</span><span class="metric-icon icon-yellow">L</span></div>
+            <div class="metric-value"><strong id="today-cost">29,47</strong><span>MDL</span></div>
+            <div class="metric-foot"><span>tarif <span id="tariff-display">3,50</span> MDL/kWh</span><button class="metric-edit-button" id="edit-cost-metric" type="button" aria-label="Modifică tariful și costul estimat">Editează ↓</button></div>
+          </article>
+          <article class="metric-card">
+            <div class="metric-top"><span>PRODUCȚIE SOLARĂ</span><span class="metric-icon icon-blue">☼</span></div>
+            <div class="metric-value"><strong id="solar-today">12,8</strong><span>kWh</span></div>
+            <div class="metric-foot"><span>medie orientativă</span><button class="metric-edit-button" id="edit-production-metric" type="button" aria-label="Modifică parametrii sistemului fotovoltaic">Configurează ↓</button></div>
+          </article>
+          <article class="metric-card">
+            <div class="metric-top"><span>AUTOCONSUM ESTIMAT</span><span class="metric-icon icon-purple">◉</span></div>
+            <div class="metric-value"><strong id="self-use">76</strong><span>%</span></div>
+            <div class="metric-foot"><span>din producția introdusă</span><button class="metric-edit-button" id="edit-self-use-metric" type="button" aria-label="Modifică autoconsumul estimat">Configurează ↓</button></div>
+          </article>
+        </section>
+
+        <section class="overview-grid">
+          <article class="panel consumption-panel" id="tracker">
+            <div class="panel-heading">
+              <div><div class="section-kicker">ANALIZĂ ENERGETICĂ</div><h2>Consumul tău</h2></div>
+              <div class="chart-controls"><div class="period-select" role="group" aria-label="Perioada graficului"><button class="period-button active" data-period="week">7 zile</button><button class="period-button" data-period="month">30 zile</button></div><button class="icon-button chart-menu" id="chart-menu" aria-label="Actualizează graficul">↻</button></div>
+            </div>
+            <div class="consumption-summary"><strong id="chart-total">52,8 <small>kWh</small></strong><span>în perioada selectată</span><span class="summary-pill" id="period-comparison">↓ 8,3% vs. anterior</span></div>
+            <p class="chart-data-note">Istoricul și perioada anterioară sunt demonstrative; valoarea de azi este calculată din aparatele introduse.</p>
+            <div class="chart-legend"><span><i class="legend-dot dot-lime"></i> Consum</span><span><i class="legend-dot dot-muted"></i> Perioada anterioară</span><span class="legend-scale">kWh</span></div>
+            <div class="chart-wrap"><canvas id="consumption-chart" aria-label="Grafic consum energetic" role="img"></canvas></div>
+          </article>
+          <article class="panel weather-panel" id="weather">
+            <div class="panel-heading">
+              <div><div class="section-kicker">REPUBLICA MOLDOVA <span class="live-tag" id="weather-live-status" aria-live="polite"><i></i><span id="weather-status-label">SE ÎNCARCĂ</span></span></div><h2>Vreme & producție</h2></div>
+              <div class="weather-heading-actions"><span class="weather-location">⌖ Chișinău, MD</span><button class="weather-refresh" id="weather-refresh" type="button" aria-label="Reîncarcă prognoza" title="Reîncarcă prognoza">↻</button></div>
+            </div>
+            <div class="weather-current"><div><div class="weather-condition" id="today-condition">Se încarcă prognoza…</div><div class="weather-temperature"><span id="current-temperature">—</span><span>°C</span></div><div class="weather-detail" id="current-weather-detail">Datele meteo sunt în curs de încărcare.</div></div><div class="weather-art" id="today-weather-art" aria-hidden="true"><span class="sun-orb"></span><span class="cloud-shape"></span></div></div>
+            <div class="forecast-row"><span id="today-forecast-label">ASTĂZI</span><div class="forecast-icon" id="today-forecast-icon" aria-hidden="true">☀</div><strong id="today-high">—°</strong><span class="forecast-muted" id="today-low">—°</span><div class="forecast-progress"><i id="today-precipitation-bar" style="width:0%"></i></div><span id="today-precipitation">—%</span></div>
+            <div class="forecast-row tomorrow"><span id="tomorrow-forecast-label">MÂINE</span><div class="forecast-icon cloud-icon" id="tomorrow-forecast-icon" aria-hidden="true">☁</div><strong id="tomorrow-high">—°</strong><span class="forecast-muted" id="tomorrow-low">—°</span><div class="forecast-progress"><i id="tomorrow-precipitation-bar" style="width:0%"></i></div><span id="tomorrow-precipitation">—%</span></div>
+            <div class="solar-forecast">
+              <div class="solar-forecast-head"><span>PRODUCȚIE ESTIMATĂ · PROGNOZĂ</span><span class="forecast-confidence" id="solar-forecast-confidence">● —</span></div>
+              <div class="solar-forecast-value"><strong id="tomorrow-production">—</strong><span>kWh</span><span class="solar-production-bar"><i id="production-bar" style="width:0%"></i></span></div>
+              <div class="solar-recommendation"><span>✳</span><p id="energy-recommendation">Estimarea producției solare apare după încărcarea prognozei.</p></div>
+            </div>
+            <p class="weather-source">Sursă: <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo</a> · Factor de performanță estimativ 80%; orientarea, umbrirea și înclinarea pot schimba producția reală.</p>
+            <p class="weather-error" id="weather-error" role="status" aria-live="polite" hidden></p>
+          </article>
+        </section>
+
+        <section class="lower-grid">
+          <article class="panel appliances-panel">
+            <div class="panel-heading">
+              <div><div class="section-kicker">DETALIU PE ECHIPAMENTE</div><h2>Unde se duce energia</h2></div>
+              <button class="text-button" id="scroll-to-calculator">+ Adaugă aparat</button>
+            </div>
+            <div class="appliance-content"><div class="doughnut-wrap"><canvas id="appliance-chart" aria-label="Distribuția consumului pe aparate" role="img"></canvas><div class="doughnut-center"><strong id="appliance-total">8,4</strong><span>kWh / zi</span></div></div><div class="appliance-legend" id="appliance-legend"></div></div>
+          </article>
+          <article class="panel waveform-panel engineer-only" id="waveform-panel">
+            <div class="panel-heading">
+              <div><div class="section-kicker">ANALIZĂ ELECTROTEHNICĂ</div><h2>Undă tensiune & curent</h2></div>
+              <span class="frequency-badge">50 <small>Hz</small></span>
+            </div>
+            <div class="waveform-reading"><span><i class="wave-key wave-voltage"></i> Tensiune <strong>230 V</strong></span><span><i class="wave-key wave-current"></i> Curent conectat estimat <strong id="current-reading">12,9 A</strong></span></div>
+            <div class="waveform-box"><canvas id="waveform" aria-label="Simulare undă sinusoidală tensiune și curent" role="img"></canvas></div>
+            <div class="wave-controls"><label for="pf-slider">Factor de putere (cos φ)</label><input type="range" min="0.50" max="1" step="0.01" value="0.92" id="pf-slider"><output id="pf-output">0,92</output></div>
+            <div class="cable-length-control"><label for="cable-length">Lungime traseu cablu (m, un sens)<input id="cable-length" type="number" min="1" max="500" step="1" value="20"></label></div>
+            <div class="engineering-extra">Cădere de tensiune estimată <strong id="voltage-drop">2,4%</strong><span>·</span> Secțiune minimă orientativă pentru ≤3% <strong id="cable-section">1,5 mm²</strong></div>
+            <p class="engineering-note" id="engineering-note">Estimare orientativă: traseu de 20 m într-un sens, cupru la 20 °C, 230 V monofazat și toate puterile introduse simultan. Secțiunea urmărește doar o cădere de tensiune de cel mult 3%; nu verifică încălzirea conductorului, protecțiile sau metoda de montaj. Confirmă dimensionarea cu un electrician autorizat.</p>
+          </article>
+          <article class="panel solar-system-panel" id="solar">
+            <div class="panel-heading">
+              <div><div class="section-kicker">ENERGIE REGENERABILĂ</div><h2>Sistemul tău solar</h2></div>
+              <span class="system-status"><i></i> OPERAȚIONAL</span>
+            </div>
+            <div class="solar-system-body"><div class="solar-illustration"><img src="assets/solar-panels-landscape.svg" alt="Ilustrație cu panouri fotovoltaice pe acoperiș, soare și locuință"></div><div class="solar-system-stats"><div><span>PUTERE INSTALATĂ</span><strong><span id="system-power-display">6.0</span> <small>kWp</small></strong></div><div><span>ECONOMIE LUNARĂ</span><strong class="green-value"><span id="monthly-saving-display">1.663</span> <small>MDL</small></strong></div><div><span>AMORTIZARE ESTIMATĂ</span><strong><span id="payback-display">9,8</span> <small id="payback-unit">ani</small></strong></div></div></div>
+            <p class="solar-estimate-note">Estimarea presupune că 76% din producție este autoconsumată; venitul din energia livrată în rețea nu este inclus.</p>
+            <button class="solar-edit-button" id="edit-solar">Configurează sistemul <span>↗</span></button>
+          </article>
+          <article class="panel calculator-panel" id="calculator">
+            <div class="panel-heading">
+              <div><div class="section-kicker">PLANIFICATOR ENERGETIC · MD</div><h2>Calculator consum</h2></div>
+              <label class="currency-label" for="tariff-input">TARIFUL TĂU · MDL/kWh <input id="tariff-input" type="number" min="0" max="10" step="0.01" value="3.50" aria-describedby="tariff-help"></label>
+            </div>
+            <form id="appliance-form" class="appliance-form">
+              <label>Nume aparat<input id="appliance-name" type="text" maxlength="32" placeholder="ex. Mașină de spălat" required></label>
+              <label>Putere (W)<input id="appliance-watts" type="number" min="1" max="50000" placeholder="ex. 1200" required></label>
+              <label>Ore / zi<input id="appliance-hours" type="number" min="0.1" max="24" step="0.1" placeholder="ex. 1.5" required></label>
+              <button type="submit" class="button button-primary add-appliance" id="save-appliance">+ Adaugă</button>
+              <button type="button" class="button button-outline" id="cancel-edit-appliance" hidden>Anulează</button>
+            </form>
+            <div class="appliance-table-wrap"><table class="appliance-table"><thead><tr><th>ECHIPAMENT</th><th>PUTERE</th><th>ORE/ZI</th><th>kWh/ZI</th><th></th></tr></thead><tbody id="appliance-rows"></tbody></table></div>
+            <div class="calculator-summary"><div><span>CONSUM ZILNIC</span><strong id="daily-total">8,42 <small>kWh</small></strong></div><div><span>CONSUM LUNAR</span><strong id="monthly-total">252,60 <small>kWh</small></strong></div><div><span>COST LUNAR ESTIMAT</span><strong class="green-value" id="monthly-cost">884,10 <small>MDL</small></strong></div></div>
+            <p class="tariff-note" id="tariff-help">Tariful de 3,50 MDL/kWh este doar un exemplu. Introdu prețul final aplicat din factura furnizorului tău din Moldova. Modificările se calculează automat și se păstrează pe acest dispozitiv când stocarea browserului este disponibilă.</p>
+          </article>
+        </section>
+
+        <section class="savings-section" id="savings">
+          <div class="savings-copy"><div class="section-kicker">MICĂ SCHIMBARE, IMPACT MARE</div><h2>Iluminează mai eficient.</h2><p>Ajustează procentul de reducere a consumului pentru iluminat și vezi cât economisești într-un an.</p><div class="savings-control"><label for="savings-slider">Reducere consum iluminat</label><input type="range" id="savings-slider" min="0" max="80" value="35"><output id="savings-percent">35%</output></div><div class="savings-note">Estimare demonstrativă: baza este 990 kWh/an pentru iluminat și poate să nu corespundă locuinței tale.</div></div>
+          <div class="savings-result"><div class="savings-orb">✳</div><span>ECONOMIE ANUALĂ ESTIMATĂ</span><strong><span id="annual-saving">1.215</span><small> MDL</small></strong><div class="savings-equivalent">≈ <span id="saved-kwh">347</span> kWh economisiți / an</div></div>
+        </section>
+
+        <section class="directory-section" id="electricians">
+          <div class="section-header"><div><div class="section-kicker">DIRECTOR · SURSE OFICIALE</div><h2>Electricieni autorizați.</h2><p>Afișăm profiluri numai după confirmarea lor într-un registru public verificabil.</p></div></div>
+          <div class="electricians-grid" id="electricians-grid" aria-live="polite"></div>
+          <div class="results-footer"><span>Nu afișăm persoane, ratinguri, recenzii sau telefoane neverificate.</span><span>Sursa indicată: Agenția Națională pentru Reglementare în Energetică (ANRE).</span></div>
+        </section>
+
+        <section class="news-section" id="news">
+          <div class="section-header news-header"><div><div class="section-kicker">PULSE ENERGETIC · MOLDOVA & LUME</div><h2>Idei bune, energie nouă.</h2><p>Informații locale și analize globale, cu surse pentru verificare.</p></div><a class="text-button" href="#news-grid">Toate articolele ↗</a></div>
+          <div class="news-grid" id="news-grid"></div>
+        </section>
+        <section class="resources-section" id="resources">
+          <div class="section-header resources-header">
+            <div><div class="section-kicker">BIBLIOTECĂ ENERGETICĂ · REPUBLICA MOLDOVA</div><h2>Citește înainte să calculezi.</h2><p>Ghiduri practice despre facturi, economisire, încălzire și investiții verzi, cu estimări în MDL și legături către instrumentele relevante.</p></div>
+            <span class="resource-count" id="guide-count">22 GHIDURI</span>
+          </div>
+          <div class="guides-grid" id="guides-grid"></div>
+          <div class="calculators-directory" id="local-resources">
+            <div class="section-header calculators-header"><div><div class="section-kicker">RESURSE LOCALE</div><h2>Republica Moldova</h2><p>Calcule orientative în MDL și legături către instituții și operatori energetici locali.</p></div></div>
+            <div class="resource-link-groups" id="resource-link-groups"></div>
+            <p class="resources-disclaimer">VoltConsum este un instrument informativ, nu un furnizor și nu o sursă de tarife oficiale. Tarifele, regulile de racordare și condițiile prosumatorilor se pot schimba; verifică informația actuală la ANRE, furnizorul și operatorul de rețea. Prognoza meteo și producția afișate aici sunt demonstrative, nu date în timp real.</p>
+          </div>
+        </section>
+        <footer class="footer"><a class="footer-brand" href="#overview">VoltConsum<span>.</span></a><span>Instrument orientativ pentru Republica Moldova · Vreme și producție demo · Știrile includ linkuri spre surse.</span><span>© VoltConsum 2026</span><span class="background-photo-credit">Fundal: „Electricity pylons, sunset 02” — Novoklimov · <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">CC BY 4.0</a></span></footer>
+      </div>
+    </main>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <div class="modal-backdrop" id="solar-modal" hidden>
+    <section class="solar-modal panel" role="dialog" aria-modal="true" aria-labelledby="solar-modal-title">
+      <button class="icon-button modal-close" id="close-solar-modal" aria-label="Închide">×</button>
+      <div class="section-kicker">CONFIGURARE FOTOVOLTAICĂ</div><h2 id="solar-modal-title">Sistemul tău solar</h2><p>Modifică parametrii pentru estimări orientative. Rezultatele se actualizează automat, iar setările se păstrează pe acest dispozitiv. Introdu oferta primită în MDL și producția potrivită locației tale din Republica Moldova.</p>
+      <label>Putere sistem (kWp)<input id="system-power-input" type="number" min="0.1" max="1000" step="0.1" value="6"></label>
+      <label>Investiție inițială (MDL)<input id="investment-input" type="number" min="1" max="100000000" step="any" value="195000"></label>
+      <label>Producție estimată anuală (kWh/kWp)<input id="solar-yield-input" type="number" min="1" max="3000" step="any" value="1250"></label>
+      <label>Autoconsum estimat (%)<input id="solar-self-consumption-input" type="number" min="0" max="100" step="1" value="76"></label>
+      <p class="solar-estimate-note">Partea de producție folosită direct în locuință. Venitul din energia injectată în rețea nu este inclus.</p>
+      <div class="modal-actions"><button class="button button-outline" id="cancel-solar">Anulează</button><button class="button button-primary" id="save-solar">Salvează estimarea</button></div>
+    </section>
+  </div>
+</body>
+</html>

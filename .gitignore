@@ -1,0 +1,8 @@
+.vercel/
+.firebase/
+node_modules/
+.env
+.env.*
+firebase-debug.log
+firebase-debug.*.log
+voltconsum-raport-energetic.json
