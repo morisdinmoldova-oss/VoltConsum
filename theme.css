@@ -642,3 +642,4 @@ html[data-theme="light"] .weather-source a{color:#315f9a}
 html[data-theme="light"] .weather-error{color:#9b3f25}
 html[data-theme="light"] .live-tag.weather-offline{color:#a5452d}
 @media(max-width:390px){.weather-heading-actions{gap:4px}.weather-location{font-size:9px}}
+.sidebar{overflow-y:auto;overscroll-behavior:contain}
