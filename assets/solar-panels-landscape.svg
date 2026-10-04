@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 400" fill="none" role="img">
+  <title>Peisaj solar fotovoltaic</title>
+  <desc>Panouri fotovoltaice pe un acoperiș, soare la apus, locuință și peisaj verde.</desc>
+  <defs>
+    <linearGradient id="sky" x1="320" y1="0" x2="320" y2="400" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#172b49"/>
+      <stop offset=".52" stop-color="#457da0"/>
+      <stop offset="1" stop-color="#e5ad76"/>
+    </linearGradient>
+    <linearGradient id="sun" x1="450" y1="55" x2="450" y2="179" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#fff7c2"/>
+      <stop offset="1" stop-color="#f7ad60"/>
+    </linearGradient>
+    <linearGradient id="hill" x1="350" y1="180" x2="340" y2="380" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#78a879"/>
+      <stop offset="1" stop-color="#214b48"/>
+    </linearGradient>
+    <linearGradient id="roof" x1="130" y1="170" x2="470" y2="300" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#4c6470"/>
+      <stop offset="1" stop-color="#263b50"/>
+    </linearGradient>
+    <linearGradient id="panel" x1="230" y1="218" x2="480" y2="325" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#61c5ed"/>
+      <stop offset=".5" stop-color="#286596"/>
+      <stop offset="1" stop-color="#182f5b"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="268" y1="225" x2="435" y2="296" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#d4f8ff" stop-opacity=".64"/>
+      <stop offset=".48" stop-color="#67c5ec" stop-opacity=".12"/>
+      <stop offset="1" stop-color="#b39aff" stop-opacity=".32"/>
+    </linearGradient>
+    <filter id="glow" x="367" y="32" width="166" height="166" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse">
+      <feGaussianBlur stdDeviation="22"/>
+    </filter>
+    <filter id="shadow" x="71" y="160" width="512" height="238" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse">
+      <feGaussianBlur stdDeviation="13"/>
+    </filter>
+    <pattern id="cells" width="48" height="30" patternUnits="userSpaceOnUse">
+      <path d="M0 0h48M0 0v30" stroke="#c9f1ff" stroke-opacity=".56" stroke-width="1.5"/>
+    </pattern>
+    <clipPath id="panel-clip">
+      <path d="m221 221 232-15 68 105-249 22-71-112Z"/>
+    </clipPath>
+    <clipPath id="scene-clip">
+      <rect width="640" height="400" rx="24"/>
+    </clipPath>
+  </defs>
+  <g clip-path="url(#scene-clip)">
+    <path fill="url(#sky)" d="M0 0h640v400H0z"/>
+    <circle cx="450" cy="115" r="61" fill="#ffd49b" opacity=".35" filter="url(#glow)"/>
+    <circle cx="450" cy="115" r="43" fill="url(#sun)"/>
+    <path d="M0 222c74-44 140-50 210-21 73 30 108 24 175-6 74-33 143-19 255 34v171H0V222Z" fill="#657f85" opacity=".68"/>
+    <path d="M0 267c102-48 169-43 251-5 75 35 134 21 201-10 67-30 125-19 188 15v133H0V267Z" fill="url(#hill)"/>
+    <path d="M0 315c80-30 132-23 203 6 72 30 121 28 192-1 96-40 158-32 245 12v68H0v-85Z" fill="#244a47"/>
+    <path d="M34 272c22-18 46-23 69-14m354-30c24-16 52-16 75-3m-31 67c21-12 42-13 62-4" stroke="#d8f2dc" stroke-opacity=".42" stroke-width="3" stroke-linecap="round"/>
+    <g opacity=".9">
+      <path d="M74 300v-34m-11 34 11-34 12 34m-19-15h15m-13-9h9m-5-10v34" stroke="#d5e4d3" stroke-width="2"/>
+      <path d="M74 266 62 284m24-18-12 18" stroke="#d5e4d3" stroke-width="2"/>
+      <path d="M89 296h20m-18 4h17m-14 4h11" stroke="#c8d9c7" stroke-width="2" stroke-linecap="round"/>
+    </g>
+    <path d="M96 380 219 224l251-16 93 172H96Z" fill="#132237" opacity=".52" filter="url(#shadow)"/>
+    <path d="m128 254 168-104 190 65-153 116-205-77Z" fill="url(#roof)" stroke="#b9d5df" stroke-opacity=".75" stroke-width="3"/>
+    <path d="m128 254 205 77v69H128V254Z" fill="#d5c4a9"/>
+    <path d="m333 331 153-116v115l-153 70v-69Z" fill="#bca98f"/>
+    <path d="m128 254 205 77 153-116" stroke="#f0d8b6" stroke-width="7" stroke-linejoin="round"/>
+    <path d="m177 231 120-74 157 55-117 85-160-66Z" fill="url(#panel)" stroke="#d5f5ff" stroke-opacity=".88" stroke-width="3"/>
+    <g clip-path="url(#panel-clip)">
+      <path d="m177 231 120-74 157 55-117 85-160-66Z" fill="url(#glass)"/>
+      <path d="m188 231 121-72m-82 90 121-73m-81 91 121-73m-82 90 121-73m-128-41 156 65m-178-51 156 65m-178-51 156 65m-178-51 156 65" stroke="#d7f7ff" stroke-opacity=".68" stroke-width="2"/>
+      <path d="m177 231 120-74 157 55-117 85-160-66Z" stroke="#d9f8ff" stroke-opacity=".55" stroke-width="8"/>
+    </g>
+    <path d="m177 231 120-74 157 55-117 85-160-66Z" stroke="#bcecff" stroke-width="3"/>
+    <path d="M277 286v47m0 0h28m-28 0h-17" stroke="#ffcf86" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="277" cy="286" r="5" fill="#ffe2a3"/>
+    <path d="M471 254v55" stroke="#e8cba4" stroke-width="5"/>
+    <path d="M460 309h22l-11-18-11 18Z" fill="#314b56"/>
+    <path d="M0 371c111-19 192-7 278 12 89 20 212 10 362-24v41H0v-29Z" fill="#153936" opacity=".9"/>
+    <path d="M27 58h74M27 69h42m466 72h59m-59 11h38" stroke="#d9efff" stroke-opacity=".25" stroke-width="2" stroke-linecap="round"/>
+    <circle cx="101" cy="70" r="3" fill="#dff6ff" opacity=".75"/>
+    <circle cx="561" cy="93" r="2" fill="#fff1cb" opacity=".8"/>
+    <path d="M0 341c61-19 100-17 144-4m350 38c58-20 93-23 146-14" stroke="#75d9cf" stroke-opacity=".46" stroke-width="2"/>
+    <rect x="1.5" y="1.5" width="637" height="397" rx="22.5" stroke="#e9f5ff" stroke-opacity=".22" stroke-width="3"/>
+  </g>
+</svg>
