@@ -38,13 +38,13 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css?v=20261004-13">
-  <link rel="stylesheet" href="theme.css?v=20261004-26">
+  <link rel="stylesheet" href="theme.css?v=20261004-27">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js" defer></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js" defer></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js" defer></script>
   <script src="firebase-config.js?v=20261004-2" defer></script>
-  <script src="i18n.js?v=20261004-14" defer></script>
-  <script src="app.js?v=20261004-18" defer></script>
+  <script src="i18n.js?v=20261004-15" defer></script>
+  <script src="app.js?v=20261004-19" defer></script>
 </head>
 <body>
   <main class="auth-screen" id="auth-screen">
@@ -146,7 +146,7 @@
         <section class="welcome-row">
           <div>
             <div class="eyebrow"><span class="eyebrow-line"></span> <span id="local-date">ASTĂZI</span></div>
-            <h1>Bună dimineața, <span id="welcome-name">Vizitator</span> <span class="wave">✳</span></h1>
+            <h1><span id="greeting-text">Bună dimineața,</span> <span id="welcome-name">Vizitator</span> <span class="wave">✳</span></h1>
             <p class="welcome-subtitle">Iată cum arată energia ta astăzi.</p>
           </div>
           <div class="export-actions"><button class="button button-outline" id="export-pdf"><span>↗</span> Exportă PDF</button><button class="button button-outline" id="export-json"><span>↓</span> JSON</button></div>
@@ -189,8 +189,16 @@
           <article class="panel weather-panel" id="weather">
             <div class="panel-heading">
               <div><div class="section-kicker">REPUBLICA MOLDOVA <span class="live-tag" id="weather-live-status" aria-live="polite"><i></i><span id="weather-status-label">SE ÎNCARCĂ</span></span></div><h2>Vreme & producție</h2></div>
-              <div class="weather-heading-actions"><span class="weather-location">⌖ Chișinău, MD</span><button class="weather-refresh" id="weather-refresh" type="button" aria-label="Reîncarcă prognoza" title="Reîncarcă prognoza">↻</button></div>
+              <div class="weather-heading-actions"><span class="weather-location"><span>⌖</span> <span id="weather-location-name">Chișinău</span></span><button class="weather-refresh" id="weather-refresh" type="button" aria-label="Reîncarcă prognoza" title="Reîncarcă prognoza">↻</button></div>
             </div>
+                          <div class="weather-picker">
+                            <div class="weather-search">
+                              <input id="weather-search" type="search" placeholder="Caută orice localitate din Moldova (oraș sau sat)" aria-label="Caută localitatea pentru prognoză" autocomplete="off" maxlength="60" role="combobox" aria-expanded="false" aria-controls="weather-results">
+                              <ul id="weather-results" role="listbox" aria-label="Localități găsite" hidden></ul>
+                            </div>
+                            <button class="weather-geolocate" id="weather-geolocate" type="button">⌖ Locația mea</button>
+                          </div>
+                          <p class="weather-picker-status" id="weather-picker-status" role="status" aria-live="polite" hidden></p>
             <div class="weather-current"><div><div class="weather-condition" id="today-condition">Se încarcă prognoza…</div><div class="weather-temperature"><span id="current-temperature">—</span><span>°C</span></div><div class="weather-detail" id="current-weather-detail">Datele meteo sunt în curs de încărcare.</div></div><div class="weather-art" id="today-weather-art" aria-hidden="true"><span class="sun-orb"></span><span class="cloud-shape"></span></div></div>
             <div class="forecast-row"><span id="today-forecast-label">ASTĂZI</span><div class="forecast-icon" id="today-forecast-icon" aria-hidden="true">☀</div><strong id="today-high">—°</strong><span class="forecast-muted" id="today-low">—°</span><div class="forecast-progress"><i id="today-precipitation-bar" style="width:0%"></i></div><span id="today-precipitation">—%</span></div>
             <div class="forecast-row tomorrow"><span id="tomorrow-forecast-label">MÂINE</span><div class="forecast-icon cloud-icon" id="tomorrow-forecast-icon" aria-hidden="true">☁</div><strong id="tomorrow-high">—°</strong><span class="forecast-muted" id="tomorrow-low">—°</span><div class="forecast-progress"><i id="tomorrow-precipitation-bar" style="width:0%"></i></div><span id="tomorrow-precipitation">—%</span></div>

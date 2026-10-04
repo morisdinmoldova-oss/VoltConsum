@@ -30,7 +30,11 @@ let localDemoSession = false;
 
 const THEME_KEY = "voltconsum.theme";
 const APP_STATE_KEY = "voltconsum.calculator.state";
-const WEATHER_COORDINATES = { latitude: 47.0105, longitude: 28.8638 };
+const DEFAULT_WEATHER_LOCATION = { name: "Chișinău", admin: "", latitude: 47.0105, longitude: 28.8638 };
+const WEATHER_LOCATION_KEY = "voltconsum.weather.location";
+const MOLDOVA_BOUNDS = { minLat: 45.4, maxLat: 48.55, minLon: 26.55, maxLon: 30.2 };
+const WEATHER_REFRESH_MS = 30 * 60 * 1000;
+let weatherLocation = { ...DEFAULT_WEATHER_LOCATION };
 const WEATHER_PERFORMANCE_RATIO = 0.8;
 const DEFAULT_SOLAR = { power: 6, investment: 195000, yieldPerKwp: 1250, selfConsumptionPercent: 76 };
 const DEFAULT_CABLE_LENGTH_METERS = 20;
@@ -1064,8 +1068,8 @@ async function loadWeatherForecast() {
   try {
     const url = new URL("https://api.open-meteo.com/v1/forecast");
     url.search = new URLSearchParams({
-      latitude: String(WEATHER_COORDINATES.latitude),
-      longitude: String(WEATHER_COORDINATES.longitude),
+      latitude: String(weatherLocation.latitude),
+      longitude: String(weatherLocation.longitude),
       current: "temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m",
       daily: "weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max",
       hourly: "shortwave_radiation",
@@ -1316,6 +1320,192 @@ function closeSolarModal() {
   $("#edit-solar").focus();
 }
 
+function greetingForHour(hour) {
+  if (hour >= 5 && hour < 12) return "Bună dimineața,";
+  if (hour >= 12 && hour < 18) return "Bună ziua,";
+  return "Bună seara,";
+}
+
+function updateGreeting() {
+  const greeting = $("#greeting-text");
+  if (!greeting) return;
+  const text = greetingForHour(new Date().getHours());
+  if (greeting.dataset.source !== text) {
+    greeting.dataset.source = text;
+    greeting.textContent = text;
+  }
+}
+
+function isInsideMoldova(latitude, longitude) {
+  return Number.isFinite(latitude) && Number.isFinite(longitude) &&
+    latitude >= MOLDOVA_BOUNDS.minLat && latitude <= MOLDOVA_BOUNDS.maxLat &&
+    longitude >= MOLDOVA_BOUNDS.minLon && longitude <= MOLDOVA_BOUNDS.maxLon;
+}
+
+function isValidWeatherLocation(location) {
+  return Boolean(location) && typeof location.name === "string" && location.name.length > 0 && location.name.length <= 80 &&
+    (location.admin === undefined || typeof location.admin === "string") &&
+    isInsideMoldova(location.latitude, location.longitude);
+}
+
+function renderWeatherLocation() {
+  const label = weatherLocation.admin ? `${weatherLocation.name}, ${weatherLocation.admin}` : weatherLocation.name;
+  $("#weather-location-name").textContent = label;
+  $("#weather-location-name").title = label;
+}
+
+function loadWeatherLocation() {
+  try {
+    const stored = JSON.parse(localStorage.getItem(WEATHER_LOCATION_KEY));
+    if (isValidWeatherLocation(stored)) weatherLocation = { name: stored.name, admin: stored.admin || "", latitude: stored.latitude, longitude: stored.longitude };
+  } catch (error) {
+    weatherLocation = { ...DEFAULT_WEATHER_LOCATION };
+  }
+}
+
+function setWeatherLocation(location) {
+  weatherLocation = { name: location.name, admin: location.admin || "", latitude: location.latitude, longitude: location.longitude };
+  try {
+    localStorage.setItem(WEATHER_LOCATION_KEY, JSON.stringify(weatherLocation));
+  } catch (error) {
+    showPickerStatus("Locația este folosită acum, dar browserul nu a putut salva alegerea.");
+  }
+  renderWeatherLocation();
+  loadWeatherForecast();
+}
+
+function showPickerStatus(message) {
+  const status = $("#weather-picker-status");
+  status.textContent = message ? t(message) : "";
+  status.hidden = !message;
+}
+
+function hideWeatherResults() {
+  $("#weather-results").hidden = true;
+  $("#weather-results").replaceChildren();
+  $("#weather-search").setAttribute("aria-expanded", "false");
+}
+
+let weatherSearchController = null;
+let weatherSearchTimer;
+
+async function searchLocalities(query) {
+  if (weatherSearchController) weatherSearchController.abort();
+  weatherSearchController = new AbortController();
+  const controller = weatherSearchController;
+  const url = new URL("https://geocoding-api.open-meteo.com/v1/search");
+  const language = document.documentElement.lang;
+  url.search = new URLSearchParams({
+    name: query, count: "10", language: ["ru", "en"].includes(language) ? language : "ro", format: "json", countryCode: "MD"
+  }).toString();
+  try {
+    const response = await fetch(url, { signal: controller.signal });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const data = await response.json();
+    const results = (Array.isArray(data.results) ? data.results : []).filter(item =>
+      typeof item.name === "string" && isInsideMoldova(item.latitude, item.longitude));
+    renderWeatherResults(results);
+  } catch (error) {
+    if (error.name === "AbortError") return;
+    hideWeatherResults();
+    showPickerStatus("Căutarea localităților nu este disponibilă acum. Încearcă din nou sau folosește „Locația mea”.");
+  }
+}
+
+function renderWeatherResults(results) {
+  const list = $("#weather-results");
+  list.replaceChildren();
+  if (!results.length) {
+    hideWeatherResults();
+    showPickerStatus("Nu am găsit nicio localitate cu acest nume în Republica Moldova.");
+    return;
+  }
+  showPickerStatus("");
+  results.forEach(item => {
+    const li = document.createElement("li");
+    li.setAttribute("role", "option");
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = item.admin1 ? `${item.name} · ${item.admin1}` : item.name;
+    button.addEventListener("click", () => {
+      $("#weather-search").value = "";
+      hideWeatherResults();
+      showPickerStatus("");
+      setWeatherLocation({ name: item.name, admin: item.admin1 || "", latitude: item.latitude, longitude: item.longitude });
+    });
+    li.append(button);
+    list.append(li);
+  });
+  list.hidden = false;
+  $("#weather-search").setAttribute("aria-expanded", "true");
+}
+
+function useDeviceLocation() {
+  if (!navigator.geolocation) {
+    showPickerStatus("Browserul nu permite localizarea. Caută localitatea după nume.");
+    return;
+  }
+  const button = $("#weather-geolocate");
+  button.disabled = true;
+  showPickerStatus("Se determină locația...");
+  navigator.geolocation.getCurrentPosition(position => {
+    button.disabled = false;
+    const { latitude, longitude } = position.coords;
+    if (!isInsideMoldova(latitude, longitude)) {
+      showPickerStatus("Locația ta este în afara Republicii Moldova. Caută o localitate din Moldova după nume.");
+      return;
+    }
+    showPickerStatus("");
+    setWeatherLocation({
+      name: "Locația mea", admin: `${latitude.toFixed(3)}°N, ${longitude.toFixed(3)}°E`,
+      latitude: Math.round(latitude * 1000) / 1000, longitude: Math.round(longitude * 1000) / 1000
+    });
+  }, () => {
+    button.disabled = false;
+    showPickerStatus("Nu am putut folosi locația. Permite accesul în browser sau caută localitatea după nume.");
+  }, { enableHighAccuracy: false, timeout: 10000, maximumAge: 600000 });
+}
+
+function initWeatherLocation() {
+  loadWeatherLocation();
+  renderWeatherLocation();
+  $("#weather-search").addEventListener("input", event => {
+    clearTimeout(weatherSearchTimer);
+    const query = event.target.value.trim();
+    if (query.length < 2) {
+      if (weatherSearchController) weatherSearchController.abort();
+      hideWeatherResults();
+      showPickerStatus("");
+      return;
+    }
+    weatherSearchTimer = setTimeout(() => searchLocalities(query), 300);
+  });
+  $("#weather-search").addEventListener("keydown", event => {
+    if (event.key === "Escape") hideWeatherResults();
+    if (event.key === "ArrowDown") $("#weather-results button")?.focus();
+  });
+  $("#weather-results").addEventListener("keydown", event => {
+    const buttons = $$("#weather-results button");
+    const index = buttons.indexOf(document.activeElement);
+    if (event.key === "ArrowDown") { event.preventDefault(); buttons[Math.min(index + 1, buttons.length - 1)]?.focus(); }
+    if (event.key === "ArrowUp") { event.preventDefault(); if (index <= 0) $("#weather-search").focus(); else buttons[index - 1].focus(); }
+    if (event.key === "Escape") { hideWeatherResults(); $("#weather-search").focus(); }
+  });
+  document.addEventListener("click", event => {
+    if (!event.target.closest(".weather-search")) hideWeatherResults();
+  });
+  $("#weather-geolocate").addEventListener("click", useDeviceLocation);
+  setInterval(() => {
+    if (document.visibilityState === "visible" && appInitialized) loadWeatherForecast();
+  }, WEATHER_REFRESH_MS);
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible" && appInitialized) {
+      updateGreeting();
+      if (!weatherForecast) loadWeatherForecast();
+    }
+  });
+}
+
 function init() {
   $("#system-power-input").value = String(DEFAULT_SOLAR.power);
   $("#investment-input").value = String(DEFAULT_SOLAR.investment);
@@ -1323,6 +1513,9 @@ function init() {
   $("#solar-self-consumption-input").value = String(DEFAULT_SOLAR.selfConsumptionPercent);
   $("#cable-length").value = String(DEFAULT_CABLE_LENGTH_METERS);
   loadAppState();
+  updateGreeting();
+  setInterval(updateGreeting, 60000);
+  initWeatherLocation();
   lastValidSolarSettings = readSolarSettings();
   lastValidCableLength = Number($("#cable-length").value);
   $("#local-date").textContent = new Intl.DateTimeFormat(document.documentElement.lang === "ro" ? "ro-MD" : document.documentElement.lang, {
