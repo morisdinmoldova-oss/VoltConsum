@@ -425,6 +425,10 @@ html[data-theme="light"] #protected-app .forecast-confidence{color:#405246}
   #protected-app .topbar-actions .notifications,
   #protected-app .topbar-actions .top-avatar{display:none}
   #protected-app .mode-toggle{gap:4px;font-size:10px}
+  #protected-app .solar-system-body{align-items:stretch;flex-direction:column;gap:12px}
+  #protected-app .solar-illustration{width:100%;height:auto;aspect-ratio:640 / 400}
+  #protected-app .solar-illustration img{display:block;width:100%;height:100%;object-fit:cover}
+  #protected-app .solar-system-stats{width:100%;min-width:0}
 }
 
 @media(max-width:390px){
