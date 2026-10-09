@@ -169,6 +169,9 @@
         <li>🔥 <b>Încălzitorul</b> — transformă energia în căldură (efectul Joule, 30 Ω); se înroșește pe măsură ce puterea crește.</li>
         <li>🧯 <b>Siguranța fuzibilă</b> — protecție: dacă curentul depășește valoarea ei (în A), arde și întrerupe circuitul. O înlocuiești din panou după ce o selectezi.</li>
         <li>⏻ <b>Comutatorul</b> — deschide/închide circuitul la click și rămâne în poziție (deschis = I = 0).</li>
+        <li>🔀 <b>Întrerupătorul cap scară</b> — 3 borne (un comun + 2 căi). Click îl mută pe una din căi. Două astfel de întrerupătoare, legate între ele prin 2 fire, aprind/sting același bec din 2 locuri (de ex. la capetele unei scări).</li>
+        <li>❌ <b>Întrerupătorul cap cruce</b> — 4 borne (2 intrări, 2 ieșiri); click schimbă între legătura dreaptă și cea încrucișată. Pus între două întrerupătoare cap scară, permite comanda becului din 3 sau mai multe locuri.</li>
+        <li>🔌 <b>Sursa 220 V AC</b> — curentul alternativ din priză, cu <b>Faza (L)</b> și <b>Nulul (N)</b>. Consumatorul se leagă între L și N; valorile implicite (bec 484 Ω ≈ 100 W, siguranță 10 A) se adaptează automat. Particulele își schimbă periodic sensul. Fază–Nul direct = scurtcircuit. Alegi sursa din paletă (🔌 220 V AC sau 🔋 12 V DC) sau din scenarii.</li>
         <li>🔲 <b>Întrerupătorul (I/O)</b> — ca cel din casă: pornit (I) sau oprit (O). Pus în serie sau pe o ramură paralelă, controlezi separat acea parte a circuitului.</li>
         <li>🔘 <b>Butonul</b> — conduce doar cât timp îl ții apăsat; la eliberare circuitul se întrerupe.</li>
         <li>⎯ <b>Firul</b> — conductor ideal care leagă pinii; îl poți muta și modifica. Pus peste o componentă o „șuntează”, iar între + și − provoacă scurtcircuit.</li>
@@ -196,7 +199,7 @@
     </div>
     <div class="group">
       <span class="lbl">Tensiune</span>
-      <div class="voltage"><div><small>Sursă fixă</small><br>DC</div><b>12 V</b></div>
+      <div class="voltage"><div><small>Sursă fixă</small><br><span id="vType">DC</span></div><b id="vVal">12 V</b></div>
     </div>
     <div class="group" id="editor" hidden>
       <span class="lbl">Paletă componente (click sau trage pe schemă)</span>
@@ -211,6 +214,10 @@
         <button type="button" draggable="true" data-add="sw">⏻ Comutator</button>
         <button type="button" draggable="true" data-add="tog">🔲 Întrerupător</button>
         <button type="button" draggable="true" data-add="btn">🔘 Buton</button>
+        <button type="button" draggable="true" data-add="sw3">🔀 Cap scară</button>
+        <button type="button" draggable="true" data-add="sw4">❌ Cap cruce</button>
+        <button type="button" data-add="ac">🔌 Sursă 220 V AC</button>
+        <button type="button" data-add="src">🔋 Sursă 12 V DC</button>
       </div>
       <div class="addrow" style="align-items:center;color:#9399b2;font-size:13px">
         <label>Câte: <input id="addQty" type="number" min="1" max="10" value="1" style="width:56px"></label>
@@ -225,6 +232,9 @@
         <button type="button" data-preset="short">⚡ Scurtcircuit</button>
         <button type="button" data-preset="shunt">↯ Bec șuntat</button>
         <button type="button" data-preset="open">⛔ Circuit deschis</button>
+        <button type="button" data-preset="ac">🔌 220 V AC</button>
+        <button type="button" data-preset="stair">🔀 Cap scară</button>
+        <button type="button" data-preset="cross">❌ Cap cruce</button>
         <button type="button" data-preset="empty">🧹 Gol</button>
       </div>
     </div>
@@ -427,45 +437,70 @@
   }
 
   // ===== Nivel 3: editor liber (plasezi componente și le legi cu fire) =====
-  const TYPE_NAME = {src:'Sursă', res:'Rezistor', pot:'Reostat', bulb:'Bec', led:'LED', motor:'Motor', heater:'Încălzitor', fuse:'Siguranță', sw:'Comutator', tog:'Întrerupător', btn:'Buton'};
-  const SYM_OF = {src:'source', res:'resistor', pot:'pot', bulb:'bulb', led:'led', motor:'motor', heater:'heater', fuse:'fuse', sw:'switch', tog:'tog', btn:'btn'};
+  const TYPE_NAME = {src:'Sursă', ac:'Sursă 220 V AC', res:'Rezistor', pot:'Reostat', bulb:'Bec', led:'LED', motor:'Motor', heater:'Încălzitor', fuse:'Siguranță', sw:'Comutator', tog:'Întrerupător', btn:'Buton', sw3:'Întrerupător cap scară', sw4:'Întrerupător cap cruce'};
+  const SYM_OF = {src:'source', ac:'ac', res:'resistor', pot:'pot', bulb:'bulb', led:'led', motor:'motor', heater:'heater', fuse:'fuse', sw:'switch', tog:'tog', btn:'btn', sw3:'sw3', sw4:'sw4'};
+  const isSrc = c => c.t === 'src' || c.t === 'ac';
+  const NPT = {sw3:3, sw4:4}, npins = c => NPT[c.t] || 2;
+  const V_AC = 220, srcOf = () => state.c && state.c.parts.find(isSrc);
+  const isAC = () => { const s = srcOf(); return !!s && s.t === 'ac'; };
+  const VS = () => isAC() ? V_AC : V;
+  const PM_AC = {bulb:100, heater:2000, led:2};
+  const pmOf = c => { const m = LOADS[c.t] && LOADS[c.t].pm; return m && isAC() && PM_AC[c.t] ? PM_AC[c.t] : m; };
   // Componente cu rezistență (consumatori), cu valoarea implicită și puterea la care ating luminozitatea maximă
   const LOADS = {res:{v:10}, pot:{v:25}, bulb:{v:R_BULB, pm:P_MAX}, led:{v:60, pm:2}, motor:{v:8}, heater:{v:30, pm:12}};
-  const isLoad = c => !!LOADS[c.t], isSwitch = c => c.t === 'sw' || c.t === 'btn' || c.t === 'tog';
-  const DEFV = {res:10, pot:25, bulb:R_BULB, led:60, motor:8, heater:30, fuse:2, sw:0, tog:0, btn:0, src:V};
-  const RNG = t => t === 'bulb' ? [1, 100] : t === 'fuse' ? [1, 20] : t === 'res' ? [0, 500] : [1, 500];
+  const isLoad = c => !!LOADS[c.t], isSwitch = c => c.t === 'sw' || c.t === 'btn' || c.t === 'tog' || c.t === 'sw3' || c.t === 'sw4';
+  const DEFV = {res:10, pot:25, bulb:R_BULB, led:60, motor:8, heater:30, fuse:2, sw:0, tog:0, btn:0, sw3:0, sw4:0, src:V, ac:V_AC};
+  const DEFV_AC = {res:220, pot:300, bulb:484, led:500, motor:100, heater:24, fuse:10};
+  const defv = t => isAC() && DEFV_AC[t] !== undefined ? DEFV_AC[t] : DEFV[t];
+  const RNG = t => t === 'bulb' ? [1, 2000] : t === 'fuse' ? [1, 20] : t === 'res' ? [0, 500] : [1, 500];
   const hasVal = c => isLoad(c) || c.t === 'fuse';
   const unitOf = c => c.t === 'fuse' ? ' A' : ' Ω';
   const MAX_PARTS = 40, MAX_WIRES = 150, KEY = 'circuitMaster.free.v2';
   const R_WIRE = 0.01, FUSE_A = 30, GRID = 20, PIN = 40, STUB = 20, GMIN = 1e-8;
+  // Poziția locală a pinilor (orizontal): cap scară = comun + 2 căi, cap cruce = 2 intrări + 2 ieșiri
+  const LP = {sw3:[[-PIN,0],[PIN,-20],[PIN,20]], sw4:[[-PIN,-20],[-PIN,20],[PIN,-20],[PIN,20]]};
   let uid = 1;
   const snap = v => Math.round(v / GRID) * GRID;
-  const mk = (t, x, y, rot, v) => ({id:uid++, t, x, y, rot:rot | 0, v: v !== undefined ? v : DEFV[t], open:t === 'btn'});
+  const mk = (t, x, y, rot, v) => ({id:uid++, t, x, y, rot:rot | 0, v: v !== undefined ? v : defv(t), open:t === 'btn'});
   const W = (a, p, b, q) => ({a:[a.id, p], b:[b.id, q]});
   const PRESETS = {
     normal: () => {
-      uid = 1; const s = mk('src', 140, 260, 0, V), r = mk('res', 400, 100, 0, 20), b = mk('bulb', 700, 260, 1);
+      uid = 1; const s = mk('src', 140, 260, 0, V), r = mk('res', 400, 100, 0, 20), b = mk('bulb', 700, 260, 1, R_BULB);
       return {parts:[s, r, b], wires:[W(s, 0, r, 0), W(r, 1, b, 0), W(b, 1, s, 1)]};
     },
     parallel: () => {
-      uid = 1; const s = mk('src', 140, 260, 0, V), r = mk('res', 320, 100, 0, 10), b1 = mk('bulb', 520, 260, 1), b2 = mk('bulb', 700, 260, 1);
+      uid = 1; const s = mk('src', 140, 260, 0, V), r = mk('res', 320, 100, 0, 10), b1 = mk('bulb', 520, 260, 1, R_BULB), b2 = mk('bulb', 700, 260, 1, R_BULB);
       return {parts:[s, r, b1, b2], wires:[W(s, 0, r, 0), W(r, 1, b1, 0), W(r, 1, b2, 0), W(b1, 1, s, 1), W(b2, 1, s, 1)]};
     },
     short: () => { const c = PRESETS.normal(), s = c.parts[0]; c.wires.push(W(s, 0, s, 1)); return c; },
     shunt: () => { const c = PRESETS.normal(), b = c.parts[2]; c.wires.push(W(b, 0, b, 1)); return c; },
     open: () => {
-      uid = 1; const s = mk('src', 140, 260, 0, V), r = mk('res', 340, 100, 0, 20), sw = mk('sw', 520, 100, 0), b = mk('bulb', 700, 260, 1);
+      uid = 1; const s = mk('src', 140, 260, 0, V), r = mk('res', 340, 100, 0, 20), sw = mk('sw', 520, 100, 0), b = mk('bulb', 700, 260, 1, R_BULB);
       sw.open = true;
       return {parts:[s, r, sw, b], wires:[W(s, 0, r, 0), W(r, 1, sw, 0), W(sw, 1, b, 0), W(b, 1, s, 1)]};
+    },
+    stair: () => {
+      uid = 1; const s = mk('ac', 120, 260, 0, V_AC), a = mk('sw3', 300, 160, 0), b = mk('sw3', 560, 160, 0), l = mk('bulb', 760, 260, 1, 484);
+      b.open = true; b.flip = true;
+      return {parts:[s, a, b, l], wires:[W(s, 0, a, 0), W(a, 1, b, 1), W(a, 2, b, 2), W(b, 0, l, 0), W(l, 1, s, 1)]};
+    },
+    cross: () => {
+      uid = 1; const s = mk('ac', 120, 260, 0, V_AC), a = mk('sw3', 260, 140, 0), x = mk('sw4', 480, 140, 0), b = mk('sw3', 700, 140, 0), l = mk('bulb', 820, 300, 1, 484);
+      b.open = true; b.flip = true;
+      return {parts:[s, a, x, b, l], wires:[W(s, 0, a, 0), W(a, 1, x, 0), W(a, 2, x, 1), W(x, 2, b, 1), W(x, 3, b, 2), W(b, 0, l, 0), W(l, 1, s, 1)]};
+    },
+    ac: () => {
+      uid = 1; const s = mk('ac', 140, 260, 0, V_AC), t = mk('tog', 400, 100, 0), b = mk('bulb', 700, 260, 1, 484);
+      return {parts:[s, t, b], wires:[W(s, 0, t, 0), W(t, 1, b, 0), W(b, 1, s, 1)]};
     },
     empty: () => { uid = 1; return {parts:[mk('src', 140, 260, 0, V)], wires:[]}; }
   };
   const validCircuit = d => d && Array.isArray(d.parts) && d.parts.length <= MAX_PARTS &&
-    d.parts.filter(c => c && c.t === 'src').length === 1 &&
+    d.parts.filter(c => c && isSrc(c)).length === 1 &&
     d.parts.every(c => c && TYPE_NAME[c.t] && [c.id, c.x, c.y, c.v].every(Number.isFinite) && (c.rot === 0 || c.rot === 1)) &&
     new Set(d.parts.map(c => c.id)).size === d.parts.length &&
     Array.isArray(d.wires) && d.wires.length <= MAX_WIRES &&
-    d.wires.every(w => w && [w.a, w.b].every(r => Array.isArray(r) && d.parts.some(c => c.id === r[0]) && (r[1] === 0 || r[1] === 1)) &&
+    d.wires.every(w => w && [w.a, w.b].every(r => Array.isArray(r) && d.parts.some(c => c.id === r[0] && Number.isInteger(r[1]) && r[1] >= 0 && r[1] < npins(c))) &&
       (w.pts == null || (Array.isArray(w.pts) && w.pts.length <= 24 && w.pts.every(q => q && Number.isFinite(q.x) && Number.isFinite(q.y)))));
   function saveC() { try { localStorage.setItem(KEY, JSON.stringify(state.c)); } catch (e) {} }
   function loadC() {
@@ -477,14 +512,15 @@
   state.c = PRESETS.normal(); state.sel = null; state.pend = null; state.drag = null; state.mouse = null; state.phase = {};
   loadC();
 
-  const isVert = c => c.t === 'src' ? c.rot === 0 : c.rot === 1;
-  const pinPos = (c, p) => { const s = p ? PIN : -PIN; return isVert(c) ? {x:c.x, y:c.y + s} : {x:c.x + s, y:c.y}; };
+  const isVert = c => isSrc(c) ? c.rot === 0 : c.rot === 1;
+  const lpOf = (c, p) => { const l = LP[c.t] ? LP[c.t][p] : [p ? PIN : -PIN, 0]; return c.flip ? [-l[0], l[1]] : l; };
+  const pinPos = (c, p) => { const l = lpOf(c, p); return isVert(c) ? {x:c.x - l[1], y:c.y + l[0]} : {x:c.x + l[0], y:c.y + l[1]}; };
   const partById = id => state.c.parts.find(c => c.id === id);
   const pinXY = r => { const c = partById(r[0]); return c ? pinPos(c, r[1]) : null; };
   // Fire ortogonale: ies din pin pe axa componentei (un scurt „picior”), apoi se rutează fără să treacă prin corpul componentelor
   const eqp = (a, b) => Math.abs(a.x - b.x) < 0.5 && Math.abs(a.y - b.y) < 0.5;
   function endInfo(c, p) {
-    const q = pinPos(c, p), d = p ? 1 : -1, v = isVert(c);
+    const q = pinPos(c, p), d = lpOf(c, p)[0] < 0 ? -1 : 1, v = isVert(c);
     return {q, d, v, s: v ? {x:q.x, y:q.y + d * STUB} : {x:q.x + d * STUB, y:q.y}};
   }
   function autoMid(A, B) {
@@ -576,58 +612,70 @@
     return out;
   }
   function solveCore() {
-    const C = state.c, P = C.parts, N = P.length * 2;
+    const C = state.c, P = C.parts, N = P.length * 4, VSRC = VS();
     const out = {I:0, P:0, brightness:0, branches:[], comp:new Map(), wireI:C.wires.map(() => 0), l3:null};
     const ix = new Map(P.map((c, i) => [c.id, i]));
-    const node = r => ix.get(r[0]) * 2 + r[1];
+    const node = r => ix.get(r[0]) * 4 + r[1];
     if (!state.closed) { out.msg = {kind:'info', text:'🔌 Sursa e oprită — apasă butonul „Comutator” ca să o pornești'}; return out; }
     const els = [];
     C.wires.forEach((w, k) => els.push({a:node(w.a), b:node(w.b), r:R_WIRE, wire:k}));
     P.forEach((c, i) => {
-      if (isLoad(c)) els.push({a:i * 2, b:i * 2 + 1, r:Math.max(c.v, R_WIRE), part:c, i});
-      else if ((isSwitch(c) && !c.open) || (c.t === 'fuse' && !c.blown)) els.push({a:i * 2, b:i * 2 + 1, r:R_WIRE, part:c, i});
+      const k = i * 4, link = (a, b) => els.push({a:k + a, b:k + b, r:R_WIRE, part:c, i});
+      if (isLoad(c)) els.push({a:k, b:k + 1, r:Math.max(c.v, R_WIRE), part:c, i});
+      else if (c.t === 'sw3') link(0, c.open ? 2 : 1);
+      else if (c.t === 'sw4') { if (c.open) { link(0, 3); link(1, 2); } else { link(0, 2); link(1, 3); } }
+      else if ((isSwitch(c) && !c.open) || (c.t === 'fuse' && !c.blown)) link(0, 1);
     });
-    const si = P.findIndex(c => c.t === 'src'), plus = si * 2, minus = si * 2 + 1;
+    const si = P.findIndex(isSrc), plus = si * 4, minus = si * 4 + 1;
     const A = Array.from({length:N + 1}, () => new Array(N + 1).fill(0)), rhs = new Array(N + 1).fill(0);
     for (let k = 0; k < N; k++) A[k][k] += GMIN;
     els.forEach(e => { const g = 1 / e.r; A[e.a][e.a] += g; A[e.b][e.b] += g; A[e.a][e.b] -= g; A[e.b][e.a] -= g; });
-    A[plus][N] -= 1; A[minus][N] += 1; A[N][plus] = 1; A[N][minus] = -1; rhs[N] = V;
+    A[plus][N] -= 1; A[minus][N] += 1; A[N][plus] = 1; A[N][minus] = -1; rhs[N] = VSRC;
     const x = gauss(A, rhs);
     if (!x) { out.msg = {kind:'info', text:'⛔ Circuit deschis — nu circulă curent (I = 0)'}; return out; }
     const v = x.slice(0, N), is = x[N];
-    const trip = P.filter((c, i) => c.t === 'fuse' && !c.blown && Math.abs((v[i * 2] - v[i * 2 + 1]) / R_WIRE) > c.v);
+    const trip = P.filter((c, i) => c.t === 'fuse' && !c.blown && Math.abs((v[i * 4] - v[i * 4 + 1]) / R_WIRE) > c.v);
     if (trip.length) { trip.forEach(c => { c.blown = true; }); out.tripped = true; return out; }
-    if (Math.abs(is) > FUSE_A) { out.short = true; out.msg = {kind:'short', text:'⚡ Scurtcircuit! Siguranță declanșată'}; return out; }
+    if (Math.abs(is) > (isAC() ? 100 : FUSE_A)) { out.short = true; out.msg = {kind:'short', text:isAC() ? '⚡ Scurtcircuit Fază–Nul! Siguranța generală a declanșat' : '⚡ Scurtcircuit! Siguranță declanșată'}; return out; }
     out.I = is > 1e-5 ? is : 0;
     const zero = i => Math.abs(i) < 1e-5 ? 0 : i;
     els.forEach(e => {
       const I = zero((v[e.a] - v[e.b]) / e.r);
       if (e.wire !== undefined) { out.wireI[e.wire] = I; return; }
-      const c = e.part, p = isLoad(c) ? I * I * Math.max(c.v, R_WIRE) : 0;
-      const b = LOADS[c.t] && LOADS[c.t].pm ? Math.min(1, Math.sqrt(p / LOADS[c.t].pm)) : 0;
+      const c = e.part;
+      if (NPT[c.t]) {
+        let m = out.comp.get(c.id);
+        if (!m) { m = {I:0, P:0, b:0, U:0, pin:new Array(NPT[c.t]).fill(0), links:[]}; out.comp.set(c.id, m); }
+        const pa = e.a - e.i * 4, pb = e.b - e.i * 4;
+        m.pin[pa] += I; m.pin[pb] -= I; m.links.push([pa, pb, I]); m.I = Math.max(m.I, Math.abs(I));
+        return;
+      }
+      const p = isLoad(c) ? I * I * Math.max(c.v, R_WIRE) : 0, pm = pmOf(c);
+      const b = pm ? Math.min(1, Math.sqrt(p / pm)) : 0;
       out.comp.set(c.id, {I, P:p, b, U:Math.abs(v[e.a] - v[e.b])});
       if (c.t === 'bulb') { out.P += p; out.brightness = Math.max(out.brightness, b); }
     });
-    out.comp.set(P[si].id, {I:out.I, P:0, b:0, U:V});
+    out.comp.set(P[si].id, {I:out.I, P:0, b:0, U:VSRC});
     if (out.I === 0) { out.msg = {kind:'info', text:'⛔ Circuit deschis — nu circulă curent (I = 0)'}; return out; }
 
     // Componente ocolite (șuntate) de fire sau de un comutator închis
     const low = finder(N);
     els.forEach(e => { if (e.r === R_WIRE) low.join(e.a, e.b); });
-    const shunted = P.filter((c, i) => isLoad(c) && low.find(i * 2) === low.find(i * 2 + 1));
+    const shunted = P.filter((c, i) => isLoad(c) && low.find(i * 4) === low.find(i * 4 + 1));
     if (shunted.length) out.msg = {kind:'warn', text:'↯ ' + shunted.map(c => TYPE_NAME[c.t]).join(', ') + ' șuntat de un fir — curentul îl ocolește (U = 0)'};
 
     // Date pentru legile Kirchhoff: noduri = pini legați prin fire
     const wf = finder(N);
     C.wires.forEach(w => wf.join(node(w.a), node(w.b)));
     const groups = new Map();
-    P.forEach((c, i) => [0, 1].forEach(p => {
-      const I = c.t === 'src' ? (p ? out.I : -out.I) : (out.comp.get(c.id) ? (p ? -1 : 1) * out.comp.get(c.id).I : 0);
-      if (Math.abs(I) < 1e-5) return;
-      const g = wf.find(i * 2 + p);
+    P.forEach((c, i) => { for (let p = 0; p < npins(c); p++) {
+      const cm = out.comp.get(c.id);
+      const I = isSrc(c) ? (p ? out.I : -out.I) : NPT[c.t] ? (cm ? cm.pin[p] : 0) : (cm ? (p ? -1 : 1) * cm.I : 0);
+      if (Math.abs(I) < 1e-5) continue;
+      const g = wf.find(i * 4 + p);
       if (!groups.has(g)) groups.set(g, []);
       groups.get(g).push({c, i, p, I});
-    }));
+    } });
     let junction = null;
     for (const list of groups.values()) {
       if (list.length >= 3) {
@@ -638,24 +686,36 @@
     const path = [], seen = new Set(), goal = wf.find(minus);
     let cur = wf.find(plus);
     for (let step = 0; step < 24 && cur !== goal; step++) {
-      const cand = (groups.get(cur) || []).filter(e => e.I > 0 && e.c.t !== 'src' && !seen.has(e.c.id)).sort((a, b) => b.I - a.I)[0];
+      const cand = (groups.get(cur) || []).filter(e => e.I > 0 && !isSrc(e.c) && !seen.has(e.c.id)).sort((a, b) => b.I - a.I)[0];
       if (!cand) break;
       seen.add(cand.c.id);
       const cu = out.comp.get(cand.c.id);
       path.push({name:TYPE_NAME[cand.c.t] + (isLoad(cand.c) ? ' ' + cand.c.v + ' Ω' : ''), U:cu ? cu.U : 0});
-      cur = wf.find(cand.i * 2 + (1 - cand.p));
+      let nx = cand.i * 4 + (1 - cand.p);
+      if (NPT[cand.c.t]) {
+        let q = -1, m = 0; cu.pin.forEach((y, k) => { if (-y > m) { m = -y; q = k; } });
+        if (q < 0) break;
+        nx = cand.i * 4 + q;
+      }
+      cur = wf.find(nx);
     }
-    out.l3 = {Rt:V / out.I, junction, path};
+    out.l3 = {Rt:VSRC / out.I, junction, path};
     return out;
   }
 
   // ---------- desenare ----------
   function drawPart(c, ph) {
     const d = ph.comp.get(c.id) || {I:0, P:0, b:0}, vert = isVert(c), sel = state.sel && state.sel.kind === 'part' && state.sel.id === c.id;
-    ctx.save(); ctx.translate(c.x, c.y); if (vert) ctx.rotate(Math.PI / 2);
+    ctx.save(); ctx.translate(c.x, c.y); if (vert) ctx.rotate(Math.PI / 2); if (c.flip) ctx.scale(-1, 1);
     ctx.fillStyle = COLORS.bg; ctx.fillRect(-34, -26, 68, 52);
     if (sel) { ctx.strokeStyle = COLORS.blue; ctx.lineWidth = 1.5; ctx.setLineDash([5, 4]); ctx.strokeRect(-40, -30, 80, 60); ctx.setLineDash([]); }
-    if (c.t === 'src') {
+    if (c.t === 'ac') {
+      line([[-40,0],[-22,0]], COLORS.wire, 4); line([[22,0],[40,0]], COLORS.wire, 4);
+      ctx.strokeStyle = COLORS.yellow; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(0, 0, 22, 0, 7); ctx.stroke();
+      ctx.save(); ctx.rotate(vert ? -Math.PI / 2 : 0);
+      ctx.beginPath(); for (let k = -14; k <= 14; k += 2) { const yy = -8 * Math.sin(k / 14 * Math.PI); k === -14 ? ctx.moveTo(k, yy) : ctx.lineTo(k, yy); }
+      ctx.strokeStyle = COLORS.blue; ctx.lineWidth = 3; ctx.stroke(); ctx.restore();
+    } else if (c.t === 'src') {
       line([[-40,0],[-8,0]], COLORS.wire, 4); line([[8,0],[40,0]], COLORS.wire, 4);
       line([[-8,-24],[-8,24]], COLORS.yellow, 4); line([[8,-12],[8,12]], COLORS.blue, 7);
     } else if (c.t === 'res' || c.t === 'pot') {
@@ -693,6 +753,16 @@
       ctx.strokeStyle = c.blown ? COLORS.red : COLORS.yellow; ctx.lineWidth = 3; ctx.strokeRect(-24, -9, 48, 18);
       if (c.blown) { line([[-24,0],[-6,0]], COLORS.red, 2); line([[6,0],[24,0]], COLORS.red, 2); line([[-4,-6],[4,6]], COLORS.red, 2); }
       else line([[-24,0],[24,0]], COLORS.yellow, 2);
+    } else if (c.t === 'sw3') {
+      line([[-40,0],[-26,0]], COLORS.wire, 4); line([[26,-20],[40,-20]], COLORS.wire, 4); line([[26,20],[40,20]], COLORS.wire, 4);
+      ctx.fillStyle = COLORS.blue; [[-26,0],[26,-20],[26,20]].forEach(q => { ctx.beginPath(); ctx.arc(q[0], q[1], 4, 0, 7); ctx.fill(); });
+      line([[-26,0],[26,c.open ? 20 : -20]], COLORS.yellow, 5);
+    } else if (c.t === 'sw4') {
+      line([[-40,-20],[-26,-20]], COLORS.wire, 4); line([[-40,20],[-26,20]], COLORS.wire, 4);
+      line([[26,-20],[40,-20]], COLORS.wire, 4); line([[26,20],[40,20]], COLORS.wire, 4);
+      ctx.fillStyle = COLORS.blue; [[-26,-20],[-26,20],[26,-20],[26,20]].forEach(q => { ctx.beginPath(); ctx.arc(q[0], q[1], 4, 0, 7); ctx.fill(); });
+      if (c.open) { line([[-26,-20],[26,20]], COLORS.yellow, 5); line([[-26,20],[26,-20]], COLORS.yellow, 5); }
+      else { line([[-26,-20],[26,-20]], COLORS.yellow, 5); line([[-26,20],[26,20]], COLORS.yellow, 5); }
     } else if (c.t === 'tog') {
       line([[-40,0],[-24,0]], COLORS.wire, 4); line([[24,0],[40,0]], COLORS.wire, 4);
       const on = !c.open;
@@ -725,8 +795,9 @@
       line([[-9,9],[-5,-5],[-2,5],[2,-5],[5,5],[9,-5]], b > 0.01 ? '#fff' : '#7f849c', 2.5);
     }
     ctx.restore();
-    const txt = c.t === 'src' ? '12 V' : c.t === 'btn' ? (c.open ? 'APASĂ' : 'APĂSAT') : isSwitch(c) ? (c.open ? 'DESCHIS' : 'ÎNCHIS') : c.t === 'fuse' ? (c.blown ? 'ARSĂ' : c.v + ' A') : c.v + ' Ω';
-    const col = isLoad(c) && c.t !== 'bulb' ? COLORS.yellow : c.t === 'src' ? COLORS.blue : c.blown ? COLORS.red : COLORS.text;
+    const swTxt = c.t === 'sw3' ? (c.open ? 'POZIȚIA 2' : 'POZIȚIA 1') : c.t === 'sw4' ? (c.open ? 'ÎNCRUCIȘAT' : 'DREPT') : null;
+    const txt = c.t === 'src' ? '12 V' : c.t === 'ac' ? '220 V AC' : swTxt ? swTxt : c.t === 'btn' ? (c.open ? 'APASĂ' : 'APĂSAT') : isSwitch(c) ? (c.open ? 'DESCHIS' : 'ÎNCHIS') : c.t === 'fuse' ? (c.blown ? 'ARSĂ' : c.v + ' A') : c.v + ' Ω';
+    const col = isLoad(c) && c.t !== 'bulb' ? COLORS.yellow : isSrc(c) ? COLORS.blue : c.blown ? COLORS.red : COLORS.text;
     const cur = d.I > 0.0005 ? d.I.toFixed(2) + ' A' : '';
     if (vert) { label(txt, c.x + 36, c.y - 2, col, 13, 'left'); if (cur) label(cur, c.x + 36, c.y + 14, COLORS.blue, 12, 'left'); }
     else { label(txt, c.x, c.y - 36, col, 13); if (cur) label(cur, c.x, c.y + 50, COLORS.blue, 12); }
@@ -734,6 +805,10 @@
       const a = pinPos(c, 0), b = pinPos(c, 1);
       label('+', a.x + (vert ? -14 : 0), a.y + (vert ? 4 : -12), COLORS.yellow, 18);
       label('−', b.x + (vert ? -14 : 0), b.y + (vert ? 4 : -12), COLORS.blue, 18);
+    } else if (c.t === 'ac') {
+      const a = pinPos(c, 0), b = pinPos(c, 1);
+      label('L', a.x + (vert ? -14 : 0), a.y + (vert ? 4 : -12), COLORS.red, 16);
+      label('N', b.x + (vert ? -14 : 0), b.y + (vert ? 4 : -12), COLORS.blue, 16);
     }
   }
 
@@ -754,12 +829,15 @@
     C.parts.forEach(c => {
       drawPart(c, ph);
       const d = ph.comp.get(c.id);
-      if (d && c.t !== 'src') routes.push({key:'c' + c.id, pts:withLen([pinPos(c, 0), pinPos(c, 1)]), I:d.I});
+      if (d && d.links) d.links.forEach((l, n) => routes.push({key:'c' + c.id + '_' + n, pts:withLen([pinPos(c, l[0]), pinPos(c, l[1])]), I:l[2]}));
+      else if (d && !isSrc(c)) routes.push({key:'c' + c.id, pts:withLen([pinPos(c, 0), pinPos(c, 1)]), I:d.I});
     });
+    // Curent alternativ: sensul particulelor se inversează periodic (frecvența e redusă ca să se vadă)
+    const acf = isAC() ? Math.cos(performance.now() / 1000 * 2 * Math.PI * 0.7) : 1;
     // Particule: viteza este proporțională cu curentul de pe fiecare fir/componentă
     routes.forEach(r => {
       if (!r.I || r.pts.len < 1) return;
-      const ph0 = state.phase[r.key] = (state.phase[r.key] || 0) + r.I * 28 * dt, n = Math.max(1, Math.round(r.pts.len / 38));
+      const ph0 = state.phase[r.key] = (state.phase[r.key] || 0) + r.I * acf * 28 * dt, n = Math.max(1, Math.round(r.pts.len / 38));
       for (let k = 0; k < n; k++) {
         const pt = pointAt(r.pts, ph0 + k * r.pts.len / n), colr = k % 2 ? COLORS.blue : COLORS.yellow;
         ctx.save(); ctx.shadowColor = colr; ctx.shadowBlur = 10; ctx.fillStyle = colr;
@@ -768,11 +846,11 @@
     });
     // Pini
     const hov = state.hoverPin;
-    C.parts.forEach(c => [0, 1].forEach(p => {
+    C.parts.forEach(c => { for (let p = 0; p < npins(c); p++) {
       const q = pinPos(c, p), isPend = state.pend && state.pend[0] === c.id && state.pend[1] === p, isHov = hov && hov[0] === c.id && hov[1] === p;
       ctx.fillStyle = isPend ? COLORS.yellow : COLORS.blue; ctx.strokeStyle = COLORS.bg; ctx.lineWidth = 2;
       ctx.beginPath(); ctx.arc(q.x, q.y, isPend || isHov ? 8 : 5, 0, 7); ctx.fill(); ctx.stroke();
-    }));
+    } });
     if (state.pend && state.mouse) {
       const q = pinXY(state.pend);
       if (q) { ctx.setLineDash([6, 5]); line([[q.x, q.y], [state.mouse[0], state.mouse[1]]], COLORS.yellow, 2); ctx.setLineDash([]); }
@@ -802,10 +880,14 @@
       if (hasVal(c)) h += '<div class="row"><input id="valIn" type="number" aria-label="Valoare" min="' + RNG(c.t)[0] + '" max="' + RNG(c.t)[1] + '" step="' + (c.t === 'fuse' ? '0.5' : '1') + '" value="' + c.v + '">' + unitOf(c) + '</div>';
       if (c.t === 'fuse' && c.blown) h += '<button type="button" id="fuseFix">🧯 Înlocuiește siguranța</button>';
       if (c.t === 'btn') h += '<div style="color:#9399b2">Ține apăsat pe el pe schemă: conduce doar cât timp îl apeși.</div>';
-      if (c.t === 'sw' || c.t === 'tog') h += '<button type="button" id="swTog">' + (c.open ? 'Închide' : 'Deschide') + (c.t === 'tog' ? ' întrerupătorul' : ' comutatorul') + '</button>';
-      if (c.t === 'src') h += '<div style="color:#9399b2">Sursă fixă de 12 V — poate fi mutată și rotită.</div>';
+      if (c.t === 'sw' || c.t === 'tog' || c.t === 'sw3' || c.t === 'sw4') h += '<button type="button" id="swTog">' + (c.t === 'sw3' || c.t === 'sw4' ? 'Comută poziția' : (c.open ? 'Închide' : 'Deschide') + (c.t === 'tog' ? ' întrerupătorul' : ' comutatorul')) + '</button>';
+      if (c.t === 'sw3') h += '<div style="color:#9399b2">Cap scară: pinul din stânga e „comunul”; click îl leagă la una din cele 2 căi din dreapta.</div>';
+      if (c.t === 'sw4') h += '<div style="color:#9399b2">Cap cruce: click schimbă între legătura dreaptă și cea încrucișată (2 intrări ↔ 2 ieșiri).</div>';
+      if (c.t === 'src') h += '<div style="color:#9399b2">Sursă fixă de 12 V DC — poate fi mutată și rotită.</div>';
+      if (c.t === 'ac') h += '<div style="color:#9399b2">Rețea 220 V AC: pinul de sus este <b>Faza (L)</b>, cel de jos este <b>Nulul (N)</b>. Poate fi mutată și rotită.</div>';
+      if (c.t === 'sw3' || c.t === 'sw4') h += '<button type="button" id="flipSel">⇋ Oglindește</button>';
       h += '<button type="button" id="rotSel">⟳ Rotește (R)</button>';
-      if (c.t !== 'src') h += '<button type="button" id="delSel">🗑 Șterge (Del)</button>';
+      if (!isSrc(c)) h += '<button type="button" id="delSel">🗑 Șterge (Del)</button>';
     }
     box.innerHTML = h;
   }
@@ -816,7 +898,17 @@
     for (let y = 100; y <= 440; y += 20) for (let x = 200; x <= 840; x += 20) if (free(x, y)) return {x, y};
     return {x:200 + (P.length % 10) * 60, y:100 + (P.length % 6) * 60};
   }
+  function setSource(t) {
+    const s = srcOf();
+    if (!s || s.t === t) { note('Sursa este deja ' + (t === 'ac' ? '220 V AC.' : '12 V DC.')); return; }
+    s.t = t; s.v = DEFV[t];
+    // Valorile implicite ale componentelor se adaptează la noua tensiune; cele schimbate de tine rămân
+    const from = t === 'ac' ? DEFV : DEFV_AC, to = t === 'ac' ? DEFV_AC : DEFV;
+    state.c.parts.forEach(c => { if (to[c.t] !== undefined && from[c.t] === c.v && !isSrc(c)) c.v = to[c.t]; c.blown = false; });
+    state.closed = true; changed(); refreshStatic();
+  }
   function addComp(t, at, silent) {
+    if (t === 'ac' || t === 'src') { setSource(t); showSym(SYM_OF[t]); return false; }
     if (state.c.parts.length >= MAX_PARTS) { note('Ai atins maximum ' + MAX_PARTS + ' componente. Șterge una ca să adaugi alta.'); return false; }
     const p = freeSpot(at), val = parseFloat($('addVal').value);
     const v = hasVal({t}) && Number.isFinite(val) ? Math.min(RNG(t)[1], Math.max(Math.max(1, RNG(t)[0]), val)) : undefined;
@@ -839,7 +931,7 @@
     const s = state.sel; if (!s) return;
     const C = state.c;
     if (s.kind === 'wire') C.wires.splice(s.i, 1);
-    else { const c = partById(s.id); if (!c || c.t === 'src') return; C.parts = C.parts.filter(p => p.id !== s.id); C.wires = C.wires.filter(w => w.a[0] !== s.id && w.b[0] !== s.id); }
+    else { const c = partById(s.id); if (!c || isSrc(c)) return; C.parts = C.parts.filter(p => p.id !== s.id); C.wires = C.wires.filter(w => w.a[0] !== s.id && w.b[0] !== s.id); }
     state.sel = null; state.pend = null; changed();
   }
   function rotateSel() {
@@ -854,7 +946,7 @@
     if (state.level !== 3) return;
     e.preventDefault();
     const t = e.dataTransfer.getData('text/plain');
-    if (!TYPE_NAME[t] || t === 'src') return;
+    if (!TYPE_NAME[t]) return;
     const [x, y] = canvasPos(e), [px, py] = clampPos(x, y);
     addMany(t, {x:px, y:py});
   });
@@ -869,6 +961,7 @@
     const id = e.target.id;
     if (id === 'delSel') deleteSel();
     else if (id === 'resetWire' && state.sel && state.sel.kind === 'wire') { const w = state.c.wires[state.sel.i]; if (w) { w.pts = null; saveC(); } }
+    else if (id === 'flipSel' && state.sel) { const c = partById(state.sel.id); if (c) { c.flip = !c.flip; state.c.wires.forEach(w => { if (w.a[0] === c.id || w.b[0] === c.id) w.pts = null; }); changed(); } }
     else if (id === 'rotSel') rotateSel();
     else if (id === 'fuseFix' && state.sel) { const c = partById(state.sel.id); if (c) { c.blown = false; changed(); } }
     else if (id === 'swTog' && state.sel) { const c = partById(state.sel.id); if (c) { c.open = !c.open; refreshEditor(); saveC(); } }
@@ -883,7 +976,7 @@
     // rază de atingere ≈ 22 px pe ecran, indiferent de scara canvasului
     const rad = Math.min(26, Math.max(14, 22 * 900 / cv.getBoundingClientRect().width));
     let best = null, bd = rad;
-    for (const c of state.c.parts) for (const p of [0, 1]) { const q = pinPos(c, p), d = Math.hypot(q.x - x, q.y - y); if (d < bd) { bd = d; best = [c.id, p]; } }
+    for (const c of state.c.parts) for (let p = 0; p < npins(c); p++) { const q = pinPos(c, p), d = Math.hypot(q.x - x, q.y - y); if (d < bd) { bd = d; best = [c.id, p]; } }
     return best;
   };
   const partAt = (x, y) => {
@@ -984,7 +1077,7 @@
     if (d) {
       const c = partById(d.id);
       if (c && d.moved) state.c.wires.forEach(w => { if (w.a[0] === c.id || w.b[0] === c.id) w.pts = null; });
-      if (c && !d.moved && (c.t === 'sw' || c.t === 'tog')) c.open = !c.open;
+      if (c && !d.moved && (c.t === 'sw' || c.t === 'tog' || c.t === 'sw3' || c.t === 'sw4')) c.open = !c.open;
       state.drag = null; changed();
     }
   }
@@ -1035,7 +1128,7 @@
     });
 
     if (ph.short) {
-      const src = state.level === 3 ? state.c.parts.find(c => c.t === 'src') : null;
+      const src = state.level === 3 ? state.c.parts.find(isSrc) : null;
       const at = src || (state.level === 1 ? COMP.res1 : COMP.res2);
       spawnSparks(at.x, at.y); spawnSparks(src ? at.x : L, src ? at.y : T + 30);
       ctx.fillStyle = 'rgba(243,139,168,.08)'; ctx.fillRect(0, 0, 900, 520);
@@ -1074,6 +1167,8 @@
     swBtn.setAttribute('aria-pressed', state.closed);
     swBtn.textContent = state.closed ? 'Închis — apasă pentru a deschide' : 'Deschis — apasă pentru a închide';
     $('rGroup').hidden = state.level === 3; $('editor').hidden = state.level !== 3;
+    const ac = state.level === 3 && isAC();
+    $('vType').textContent = ac ? 'AC (Fază + Nul)' : 'DC'; $('vVal').textContent = ac ? '220 V' : '12 V';
     if (state.level === 1) {
       $('formula').innerHTML = 'Serie: R<sub>total</sub> = R + ' + R_BULB + ' Ω<br>I = V / R<sub>total</sub><br>P<sub>bec</sub> = I² · ' + R_BULB + ' Ω';
       $('hint').textContent = 'Nivel 1 — Serie: aceeași curent trece prin rezistor și bec; mărirea rezistenței estompează becul. R = 0 Ω declanșează siguranța.';
@@ -1106,6 +1201,9 @@
     I:['I — Intensitatea curentului (amperi)','Cantitatea de sarcină electrică ce trece printr-un punct în fiecare secundă. Viteza particulelor din schemă este proporțională cu I.'],
     R:['R — Rezistența (ohmi)','Cât se opune un component trecerii curentului. Mai mare R → curent mai mic. O reglezi cu slider-ul (0–50 Ω).'],
     P:['P — Puterea (wați)','Energia transformată pe secundă. Pentru bec: P = I²·R = V²/R. De ea depinde luminozitatea.'],
+    ac:['🔌 Sursa 220 V AC (Fază și Nul)','Curentul alternativ din priză: tensiunea de 220 V (valoare efectivă) își schimbă sensul de 50 de ori pe secundă. Pinul <b>L</b> este Faza (conductorul „sub tensiune”, periculos), pinul <b>N</b> este Nulul (conductorul de întoarcere, la ~0 V). Un consumator se leagă între L și N. În schemă, particulele își inversează periodic sensul. Un fir direct între L și N este scurtcircuit.'],
+    sw3:['🔀 Întrerupătorul cap scară (cap de scară)','Are 3 borne: <b>comunul</b> (în stânga) și 2 căi (în dreapta). Click îl mută pe una sau pe cealaltă cale. Două comutatoare cap scară legate prin 2 fire între căi permit aprinderea și stingerea aceluiași bec din 2 locuri (ex. jos și sus pe scară).'],
+    sw4:['❌ Întrerupătorul cap cruce (intermediar)','Are 4 borne: 2 intrări și 2 ieșiri. Click schimbă între legătura dreaptă (1→1, 2→2) și cea încrucișată (1→2, 2→1). Pus între două comutatoare cap scară, permite comanda aceluiași bec din 3 sau mai multe locuri.'],
     source:['🔋 Sursa DC (12 V)','Furnizează energia circuitului. Bara lungă este polul + , bara scurtă și groasă este polul − . Curentul convențional iese din +.'],
     switch:['⎯/⎯ Comutatorul','Închide sau deschide circuitul. Închis: curentul circulă. Deschis: circuit întrerupt, I = 0, becul e stins. Click pe el îl comută.'],
     resistor:['⌇ Rezistorul','Limitează curentul și transformă energia în căldură. Simbolul în zig-zag; valoarea în Ω este scrisă lângă el.'],
@@ -1134,14 +1232,14 @@
     let h;
     if (law === 'ohm') {
       h = 'Curentul este direct proporțional cu tensiunea și invers proporțional cu rezistența.<span class="eq">I = V / R &nbsp; P = I²·R</span>' +
-        '<div class="live">' + (on ? 'R<sub>echivalent</sub> = V / I = 12 / ' + f(ph.I) + ' = ' + f(i.Rt) + ' Ω<br>I = ' + f(ph.I) + ' A, P<sub>becuri</sub> = ' + ph.P.toFixed(1) + ' W' : off) + '</div>';
+        '<div class="live">' + (on ? 'R<sub>echivalent</sub> = V / I = ' + VS() + ' / ' + f(ph.I) + ' = ' + f(i.Rt) + ' Ω<br>I = ' + f(ph.I) + ' A, P<sub>becuri</sub> = ' + ph.P.toFixed(1) + ' W' : off) + '</div>';
     } else if (law === 'kcl') {
       const j = i && i.junction;
       h = 'Suma curenților care intră într-un nod este egală cu suma celor care ies.<span class="eq">Σ I<sub>intrare</sub> = Σ I<sub>ieșire</sub></span>' +
         '<div class="live">' + (on ? (j ? 'Nod: ' + j.ins.map(f).join(' + ') + ' = ' + j.outs.map(f).join(' + ') + ' A' : 'Fără ramificații: același curent, ' + f(ph.I) + ' A, trece prin toate componentele.') : off) + '</div>';
     } else {
       h = 'Suma algebrică a tensiunilor pe o buclă închisă este zero.<span class="eq">V<sub>sursă</sub> = ΣU<sub>căderi</sub></span>' +
-        '<div class="live">' + (on ? 'Bucla sursei: 12 V = ' + (i.path.length ? i.path.map(p => f(p.U)).join(' + ') + ' = ' + f(i.path.reduce((a, p) => a + p.U, 0)) + ' V' : '—') +
+        '<div class="live">' + (on ? 'Bucla sursei: ' + VS() + ' V = ' + (i.path.length ? i.path.map(p => f(p.U)).join(' + ') + ' = ' + f(i.path.reduce((a, p) => a + p.U, 0)) + ' V' : '—') +
           (i.path.length ? '<br>(' + i.path.map(p => p.name).join(' → ') + ')' : '') : off) + '</div>';
     }
     if (h !== lawCache) { lawCache = h; $('lawBox').innerHTML = h; }
