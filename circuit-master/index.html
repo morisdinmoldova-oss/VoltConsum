@@ -42,7 +42,7 @@
   .bulb-icon{width:34px;height:34px;border-radius:50%;margin:0 auto 6px;background:rgba(249,226,175,.08);border:2px solid var(--line);transition:box-shadow .15s,background .15s}
   .formula{font:12px Consolas,monospace;color:var(--muted);line-height:1.7}
   .stage{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
-  canvas{display:block;width:100%;height:auto;aspect-ratio:900/520;cursor:default}
+  canvas{display:block;width:100%;height:auto;aspect-ratio:900/520;cursor:default;touch-action:none;-webkit-user-select:none;user-select:none}
   #alert{position:static;margin:10px auto 0;display:none;padding:10px 20px;border-radius:10px;background:rgba(243,139,168,.15);border:1px solid var(--red);color:var(--red);font-weight:700;box-shadow:0 0 22px rgba(243,139,168,.45);text-align:center;max-width:92%}
   #alert.show{display:block;animation:blink .5s infinite alternate}
   @keyframes blink{to{box-shadow:0 0 6px rgba(243,139,168,.2)}}
@@ -880,8 +880,11 @@
 
   // ---------- mouse / touch ----------
   const pinAt = (x, y) => {
-    for (const c of state.c.parts) for (const p of [0, 1]) { const q = pinPos(c, p); if (Math.hypot(q.x - x, q.y - y) < 14) return [c.id, p]; }
-    return null;
+    // rază de atingere ≈ 22 px pe ecran, indiferent de scara canvasului
+    const rad = Math.min(26, Math.max(14, 22 * 900 / cv.getBoundingClientRect().width));
+    let best = null, bd = rad;
+    for (const c of state.c.parts) for (const p of [0, 1]) { const q = pinPos(c, p), d = Math.hypot(q.x - x, q.y - y); if (d < bd) { bd = d; best = [c.id, p]; } }
+    return best;
   };
   const partAt = (x, y) => {
     const P = state.c.parts;
