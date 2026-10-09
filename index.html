@@ -38,13 +38,13 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css?v=20261004-13">
-  <link rel="stylesheet" href="theme.css?v=20261009-01">
+  <link rel="stylesheet" href="theme.css?v=20261009-03">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js" defer></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js" defer></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js" defer></script>
   <script src="firebase-config.js?v=20261004-2" defer></script>
   <script src="i18n.js?v=20261004-15" defer></script>
-  <script src="app.js?v=20261004-19" defer></script>
+  <script src="app.js?v=20261009-20" defer></script>
 </head>
 <body>
   <main class="auth-screen" id="auth-screen">
@@ -110,8 +110,6 @@
         <a class="nav-link" href="#weather"><span class="nav-icon">◌</span> Vreme & producție <span class="nav-dot"></span></a>
         <a class="nav-link" href="#electricians"><span class="nav-icon">⌁</span> Electricieni</a>
         <a class="nav-link" href="#news"><span class="nav-icon">▤</span> Noutăți</a>
-        <a class="nav-link" href="#resources"><span class="nav-icon">⌘</span> Ghiduri & calculatoare</a>
-        <a class="nav-link" href="#methodology"><span class="nav-icon">∑</span> Cum se calculează</a>
         <a class="nav-link" href="#about"><span class="nav-icon">ⓘ</span> Despre</a>
       </nav>
       <div class="sidebar-bottom">
@@ -256,32 +254,6 @@
           </article>
         </section>
 
-        <section class="methodology-section panel" id="methodology" aria-labelledby="methodology-title">
-          <div class="section-header">
-            <div>
-              <div class="section-kicker">GHID DE CALCUL</div>
-              <h2 id="methodology-title">Cum se calculează?</h2>
-              <p>Rolul tabelelor și indicatorilor din VoltConsum, împreună cu formulele folosite.</p>
-            </div>
-          </div>
-          <div class="methodology-table-wrap">
-            <table class="methodology-table">
-              <thead><tr><th scope="col">Tabel / indicator</th><th scope="col">Rol</th><th scope="col">Formula / metodă</th></tr></thead>
-              <tbody>
-                <tr><th scope="row">Tabelul aparatelor</th><td>Puterea (W) și orele de utilizare pe zi sunt datele introduse pentru fiecare echipament; coloana kWh/zi arată energia estimată a acestuia.</td><td><code>kWh/zi = putere (W) × ore/zi ÷ 1.000</code></td></tr>
-                <tr><th scope="row">Rezumatul consumului</th><td>Adună consumul zilnic al aparatelor, estimează o lună de 30 de zile și calculează costul la tariful introdus.</td><td><code>kWh/zi = suma aparatelor</code><br><code>kWh/lună = kWh/zi × 30</code><br><code>MDL/lună = kWh/lună × tarif (MDL/kWh)</code></td></tr>
-                <tr><th scope="row">Distribuția pe aparate</th><td>Diagrama și lista arată ponderea consumului zilnic estimat pentru fiecare aparat.</td><td><code>pondere = kWh/zi aparat ÷ total kWh/zi × 100%</code></td></tr>
-                <tr><th scope="row">Graficul consumului</th><td>Compară perioadele selectate. Istoricul și comparația sunt demonstrative; doar valoarea ultimei zile provine din aparatele introduse.</td><td><code>total perioadă = suma valorilor zilnice afișate</code></td></tr>
-                <tr><th scope="row">Sistemul fotovoltaic</th><td>Estimează producția și economiile folosind puterea sistemului, producția anuală per kWp, autoconsumul și tariful. Nu include venitul din energia injectată în rețea.</td><td><code>kWh/zi = kWp × kWh/kWp/an ÷ 365</code><br><code>kWh/lună = kWp × kWh/kWp/an ÷ 12</code><br><code>MDL economisiți/lună = kWh/lună × autoconsum (%) ÷ 100 × tarif</code><br><code>amortizare (ani) = investiție ÷ economii anuale</code></td></tr>
-                <tr><th scope="row">Prognoza solară</th><td>Estimează energia de mâine pe baza puterii sistemului și a randamentului solar din prognoza meteo; rezultatul depinde de condițiile locale.</td><td><code>kWh mâine = kWp × randament prognozat (kWh/kWp)</code></td></tr>
-                <tr><th scope="row">Economia la iluminat</th><td>Aplică procentul ales unei baze demonstrative de 990 kWh/an pentru iluminat.</td><td><code>kWh economisiți/an = 990 × reducere (%) ÷ 100</code><br><code>MDL/an = kWh economisiți/an × tarif</code></td></tr>
-                <tr><th scope="row">Analiza electrotehnică</th><td>Estimează curentul și căderea de tensiune pentru 230 V monofazat, cupru la 20 °C și aparatele considerate simultan în funcțiune. Nu înlocuiește dimensionarea făcută de un electrician.</td><td><code>I = putere totală (W) ÷ (230 × cos φ)</code><br><code>ΔU (%) = 2 × L × I × ρ × cos φ ÷ (S × 230) × 100</code></td></tr>
-              </tbody>
-            </table>
-          </div>
-          <p class="methodology-note">Estimările depind de datele introduse și nu înlocuiesc citirea contorului, factura furnizorului sau verificarea unui specialist.</p>
-        </section>
-
         <section class="savings-section" id="savings">
           <div class="savings-copy"><div class="section-kicker">MICĂ SCHIMBARE, IMPACT MARE</div><h2>Iluminează mai eficient.</h2><p>Ajustează procentul de reducere a consumului pentru iluminat și vezi cât economisești într-un an.</p><div class="savings-control"><label for="savings-slider">Reducere consum iluminat</label><input type="range" id="savings-slider" min="0" max="80" value="35"><output id="savings-percent">35%</output></div><div class="savings-note">Estimare demonstrativă: baza este 990 kWh/an pentru iluminat și poate să nu corespundă locuinței tale.</div></div>
           <div class="savings-result"><div class="savings-orb">✳</div><span>ECONOMIE ANUALĂ ESTIMATĂ</span><strong><span id="annual-saving">1.215</span><small> MDL</small></strong><div class="savings-equivalent">≈ <span id="saved-kwh">347</span> kWh economisiți / an</div></div>
@@ -296,18 +268,6 @@
         <section class="news-section" id="news">
           <div class="section-header news-header"><div><div class="section-kicker">PULSE ENERGETIC · MOLDOVA & LUME</div><h2>Idei bune, energie nouă.</h2><p>Informații locale și analize globale, cu surse pentru verificare.</p></div><a class="text-button" href="#news-grid">Toate articolele ↗</a></div>
           <div class="news-grid" id="news-grid"></div>
-        </section>
-        <section class="resources-section" id="resources">
-          <div class="section-header resources-header">
-            <div><div class="section-kicker">BIBLIOTECĂ ENERGETICĂ · REPUBLICA MOLDOVA</div><h2>Citește înainte să calculezi.</h2><p>Ghiduri practice despre facturi, economisire, încălzire și investiții verzi, cu estimări în MDL și legături către instrumentele relevante.</p></div>
-            <span class="resource-count" id="guide-count">22 GHIDURI</span>
-          </div>
-          <div class="guides-grid" id="guides-grid"></div>
-          <div class="calculators-directory" id="local-resources">
-            <div class="section-header calculators-header"><div><div class="section-kicker">RESURSE LOCALE</div><h2>Republica Moldova</h2><p>Calcule orientative în MDL și legături către instituții și operatori energetici locali.</p></div></div>
-            <div class="resource-link-groups" id="resource-link-groups"></div>
-            <p class="resources-disclaimer">VoltConsum este un instrument informativ, nu un furnizor și nu o sursă de tarife oficiale. Tarifele, regulile de racordare și condițiile prosumatorilor se pot schimba; verifică informația actuală la ANRE, furnizorul și operatorul de rețea. Prognoza meteo și producția afișate aici sunt demonstrative, nu date în timp real.</p>
-          </div>
         </section>
         <section class="about-section" id="about" aria-labelledby="about-title">
           <div class="section-header">
@@ -345,6 +305,45 @@
             <article class="about-map-card"><span class="about-symbol">∑</span><div><h4>Cum se calculează?</h4><p>Explică rolul tabelelor, indicatorilor și formulelor utilizate pentru estimări.</p><a href="#methodology">Vezi formulele ↗</a></div></article>
             <article class="about-map-card"><span class="about-symbol">✳</span><div><h4>Economii la iluminat</h4><p>Mută cursorul pentru a explora o reducere ipotetică. Calculul folosește o bază demonstrativă de 990 kWh/an.</p><a href="#savings">Vezi estimarea ↗</a></div></article>
           </div>
+
+          <section class="methodology-section panel" id="methodology" aria-labelledby="methodology-title">
+            <div class="section-header">
+              <div>
+                <div class="section-kicker">GHID DE CALCUL</div>
+                <h2 id="methodology-title">Cum se calculează?</h2>
+                <p>Rolul tabelelor și indicatorilor din VoltConsum, împreună cu formulele folosite.</p>
+              </div>
+            </div>
+            <div class="methodology-table-wrap">
+              <table class="methodology-table">
+                <thead><tr><th scope="col">Tabel / indicator</th><th scope="col">Rol</th><th scope="col">Formula / metodă</th></tr></thead>
+                <tbody>
+                  <tr><th scope="row">Tabelul aparatelor</th><td>Puterea (W) și orele de utilizare pe zi sunt datele introduse pentru fiecare echipament; coloana kWh/zi arată energia estimată a acestuia.</td><td><code>kWh/zi = putere (W) × ore/zi ÷ 1.000</code></td></tr>
+                  <tr><th scope="row">Rezumatul consumului</th><td>Adună consumul zilnic al aparatelor, estimează o lună de 30 de zile și calculează costul la tariful introdus.</td><td><code>kWh/zi = suma aparatelor</code><br><code>kWh/lună = kWh/zi × 30</code><br><code>MDL/lună = kWh/lună × tarif (MDL/kWh)</code></td></tr>
+                  <tr><th scope="row">Distribuția pe aparate</th><td>Diagrama și lista arată ponderea consumului zilnic estimat pentru fiecare aparat.</td><td><code>pondere = kWh/zi aparat ÷ total kWh/zi × 100%</code></td></tr>
+                  <tr><th scope="row">Graficul consumului</th><td>Compară perioadele selectate. Istoricul și comparația sunt demonstrative; doar valoarea ultimei zile provine din aparatele introduse.</td><td><code>total perioadă = suma valorilor zilnice afișate</code></td></tr>
+                  <tr><th scope="row">Sistemul fotovoltaic</th><td>Estimează producția și economiile folosind puterea sistemului, producția anuală per kWp, autoconsumul și tariful. Nu include venitul din energia injectată în rețea.</td><td><code>kWh/zi = kWp × kWh/kWp/an ÷ 365</code><br><code>kWh/lună = kWp × kWh/kWp/an ÷ 12</code><br><code>MDL economisiți/lună = kWh/lună × autoconsum (%) ÷ 100 × tarif</code><br><code>amortizare (ani) = investiție ÷ economii anuale</code></td></tr>
+                  <tr><th scope="row">Prognoza solară</th><td>Estimează energia de mâine pe baza puterii sistemului și a randamentului solar din prognoza meteo; rezultatul depinde de condițiile locale.</td><td><code>kWh mâine = kWp × randament prognozat (kWh/kWp)</code></td></tr>
+                  <tr><th scope="row">Economia la iluminat</th><td>Aplică procentul ales unei baze demonstrative de 990 kWh/an pentru iluminat.</td><td><code>kWh economisiți/an = 990 × reducere (%) ÷ 100</code><br><code>MDL/an = kWh economisiți/an × tarif</code></td></tr>
+                  <tr><th scope="row">Analiza electrotehnică</th><td>Estimează curentul și căderea de tensiune pentru 230 V monofazat, cupru la 20 °C și aparatele considerate simultan în funcțiune. Nu înlocuiește dimensionarea făcută de un electrician.</td><td><code>I = putere totală (W) ÷ (230 × cos φ)</code><br><code>ΔU (%) = 2 × L × I × ρ × cos φ ÷ (S × 230) × 100</code></td></tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="methodology-note">Estimările depind de datele introduse și nu înlocuiesc citirea contorului, factura furnizorului sau verificarea unui specialist.</p>
+          </section>
+
+          <section class="resources-section" id="resources" aria-labelledby="resources-title">
+            <div class="section-header resources-header">
+              <div><div class="section-kicker">BIBLIOTECĂ ENERGETICĂ · REPUBLICA MOLDOVA</div><h2 id="resources-title">Citește înainte să calculezi.</h2><p>Ghiduri practice despre facturi, economisire, încălzire și investiții verzi, cu estimări în MDL și legături către instrumentele relevante.</p></div>
+              <span class="resource-count" id="guide-count">22 GHIDURI</span>
+            </div>
+            <div class="guides-grid" id="guides-grid"></div>
+            <div class="calculators-directory" id="local-resources">
+              <div class="section-header calculators-header"><div><div class="section-kicker">RESURSE LOCALE</div><h2>Republica Moldova</h2><p>Calcule orientative în MDL și legături către instituții și operatori energetici locali.</p></div></div>
+              <div class="resource-link-groups" id="resource-link-groups"></div>
+              <p class="resources-disclaimer">VoltConsum este un instrument informativ, nu un furnizor și nu o sursă de tarife oficiale. Tarifele, regulile de racordare și condițiile prosumatorilor se pot schimba; verifică informația actuală la ANRE, furnizorul și operatorul de rețea. Prognoza meteo și producția afișate aici sunt demonstrative, nu date în timp real.</p>
+            </div>
+          </section>
 
           <div class="about-subheading"><div class="section-kicker">SIMBOLURI ȘI COMENZI</div><h3>Ce înseamnă pictogramele?</h3></div>
           <div class="about-controls panel">

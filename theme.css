@@ -665,3 +665,11 @@ html[data-theme="light"] #weather-results button:hover,html[data-theme="light"] 
 html[data-theme="light"] .weather-geolocate{color:#527821;border-color:#d4dfd2}
 @media(max-width:560px){.weather-picker{flex-direction:column}.weather-geolocate{width:100%}}
 @media print{.weather-picker,.weather-picker-status{display:none!important}}
+
+html{scrollbar-color:var(--lime) var(--bg-deep);scrollbar-width:thin}
+html::-webkit-scrollbar,#sidebar::-webkit-scrollbar{width:10px;height:10px}
+html::-webkit-scrollbar-track,#sidebar::-webkit-scrollbar-track{background:var(--bg-deep)}
+html::-webkit-scrollbar-thumb,#sidebar::-webkit-scrollbar-thumb{background:var(--lime);border:2px solid var(--bg-deep);border-radius:999px}
+html::-webkit-scrollbar-thumb:hover,#sidebar::-webkit-scrollbar-thumb:hover{background:var(--lime-bright)}
+html::-webkit-scrollbar-corner{background:var(--bg-deep)}
+#sidebar{scrollbar-color:var(--lime) var(--bg-deep);scrollbar-width:thin}

@@ -1700,8 +1700,16 @@ function init() {
     const open = $("#sidebar").classList.toggle("open");
     event.currentTarget.setAttribute("aria-expanded", String(open));
   });
+  const updateActiveNavLink = hash => {
+    const target = document.getElementById(hash.slice(1));
+    const matchingNavLink = $$(".nav-link").find(item => item.hash === hash)
+      || (target?.closest("#about") && $$(".nav-link").find(item => item.hash === "#about"));
+    if (matchingNavLink) {
+      $$(".nav-link").forEach(item => item.classList.toggle("active", item === matchingNavLink));
+    }
+  };
   $$(".nav-link").forEach(link => link.addEventListener("click", () => {
-    $$(".nav-link").forEach(item => item.classList.toggle("active", item === link));
+    updateActiveNavLink(link.hash);
     $("#sidebar").classList.remove("open");
     $("#menu-toggle").setAttribute("aria-expanded", "false");
   }));
@@ -1714,17 +1722,13 @@ function init() {
     }
     const link = target.closest('#protected-app a[href^="#"]');
     if (link) {
-      const matchingNavLink = $$(".nav-link").find(item => item.hash === link.hash);
-      if (matchingNavLink) {
-        $$(".nav-link").forEach(item => item.classList.toggle("active", item === matchingNavLink));
-      }
+      updateActiveNavLink(link.hash);
       $("#sidebar").classList.remove("open");
       $("#menu-toggle").setAttribute("aria-expanded", "false");
     }
   });
   window.addEventListener("hashchange", () => {
-    const matchingNavLink = $$(".nav-link").find(item => item.hash === location.hash);
-    if (matchingNavLink) $$(".nav-link").forEach(item => item.classList.toggle("active", item === matchingNavLink));
+    updateActiveNavLink(location.hash);
   });
   document.addEventListener("keydown", event => {
     if (event.key === "Escape" && !$("#solar-modal").hidden) {
