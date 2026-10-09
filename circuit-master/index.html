@@ -151,7 +151,7 @@
       <p><i>Rolul:</i> construiești singur orice circuit (serie, paralel sau mixt) și vezi cum se comportă, cu valori calculate live și legile Ohm și Kirchhoff aplicate pe circuitul tău.</p>
       <p><i>Cum se joacă:</i></p>
       <ul>
-        <li>Din „Paleta de componente” adaugi câte vrei (max. 40): apasă un buton sau trage-l pe schemă; poți alege numărul și valoarea în Ω. Firele se pot muta trăgându-le.</li>
+        <li>Din „Paleta de componente” adaugi câte vrei (max. 40): rezistor, reostat, bec, LED, motor, încălzitor, siguranță fuzibilă, comutator și buton (care conduce doar cât îl ții apăsat). Apasă un buton sau trage-l pe schemă; poți alege numărul și valoarea. Firele se pot muta trăgându-le.</li>
         <li>Trage componentele cu mouse-ul ca să le muți.</li>
         <li>Leagă-le cu fire: trage de la un cerc albastru al unei componente la cercul alteia (sau click pe un cerc, apoi pe celălalt). Un circuit funcționează doar dacă formează o buclă închisă de la + la − al sursei.</li>
         <li>Click pe o componentă sau pe un fir îl selectează: poți schimba valoarea în Ω, comuta comutatorul, roti (tasta R) sau șterge (Del).</li>
@@ -187,12 +187,18 @@
       <span class="lbl">Paletă componente (click sau trage pe schemă)</span>
       <div class="addrow">
         <button type="button" draggable="true" data-add="res">▭ Rezistor</button>
+        <button type="button" draggable="true" data-add="pot">🎚️ Reostat</button>
         <button type="button" draggable="true" data-add="bulb">💡 Bec</button>
+        <button type="button" draggable="true" data-add="led">🟢 LED</button>
+        <button type="button" draggable="true" data-add="motor">⚙️ Motor</button>
+        <button type="button" draggable="true" data-add="heater">🔥 Încălzitor</button>
+        <button type="button" draggable="true" data-add="fuse">🧯 Siguranță</button>
         <button type="button" draggable="true" data-add="sw">⏻ Comutator</button>
+        <button type="button" draggable="true" data-add="btn">🔘 Buton</button>
       </div>
       <div class="addrow" style="align-items:center;color:#9399b2;font-size:13px">
         <label>Câte: <input id="addQty" type="number" min="1" max="10" value="1" style="width:56px"></label>
-        <label>Valoare: <input id="addVal" type="number" min="1" max="500" placeholder="auto" style="width:64px"> Ω</label>
+        <label>Valoare: <input id="addVal" type="number" min="1" max="500" placeholder="auto" style="width:64px"> Ω (A la siguranță)</label>
       </div>
       <div class="mini" id="cnt"></div>
       <div class="selbox" id="selBox"></div>
@@ -405,13 +411,20 @@
   }
 
   // ===== Nivel 3: editor liber (plasezi componente și le legi cu fire) =====
-  const TYPE_NAME = {src:'Sursă', res:'Rezistor', bulb:'Bec', sw:'Comutator'};
-  const SYM_OF = {src:'source', res:'resistor', bulb:'bulb', sw:'switch'};
+  const TYPE_NAME = {src:'Sursă', res:'Rezistor', pot:'Reostat', bulb:'Bec', led:'LED', motor:'Motor', heater:'Încălzitor', fuse:'Siguranță', sw:'Comutator', btn:'Buton'};
+  const SYM_OF = {src:'source', res:'resistor', pot:'pot', bulb:'bulb', led:'led', motor:'motor', heater:'heater', fuse:'fuse', sw:'switch', btn:'btn'};
+  // Componente cu rezistență (consumatori), cu valoarea implicită și puterea la care ating luminozitatea maximă
+  const LOADS = {res:{v:10}, pot:{v:25}, bulb:{v:R_BULB, pm:P_MAX}, led:{v:60, pm:2}, motor:{v:8}, heater:{v:30, pm:12}};
+  const isLoad = c => !!LOADS[c.t], isSwitch = c => c.t === 'sw' || c.t === 'btn';
+  const DEFV = {res:10, pot:25, bulb:R_BULB, led:60, motor:8, heater:30, fuse:2, sw:0, btn:0, src:V};
+  const RNG = t => t === 'bulb' ? [1, 100] : t === 'fuse' ? [1, 20] : t === 'res' ? [0, 500] : [1, 500];
+  const hasVal = c => isLoad(c) || c.t === 'fuse';
+  const unitOf = c => c.t === 'fuse' ? ' A' : ' Ω';
   const MAX_PARTS = 40, MAX_WIRES = 150, KEY = 'circuitMaster.free.v2';
   const R_WIRE = 0.01, FUSE_A = 30, GRID = 20, PIN = 40, STUB = 20, GMIN = 1e-8;
   let uid = 1;
   const snap = v => Math.round(v / GRID) * GRID;
-  const mk = (t, x, y, rot, v) => ({id:uid++, t, x, y, rot:rot | 0, v: v !== undefined ? v : (t === 'bulb' ? R_BULB : t === 'res' ? 10 : 0), open:false});
+  const mk = (t, x, y, rot, v) => ({id:uid++, t, x, y, rot:rot | 0, v: v !== undefined ? v : DEFV[t], open:t === 'btn'});
   const W = (a, p, b, q) => ({a:[a.id, p], b:[b.id, q]});
   const PRESETS = {
     normal: () => {
@@ -538,6 +551,15 @@
 
   // Analiză nodală (MNA): firele au 0,01 Ω ca să putem afișa curentul prin ele
   function solve3() {
+    let out, tripped = false;
+    for (let n = 0; n < 8; n++) { out = solveCore(); if (!out.tripped) break; tripped = true; }
+    if (out.tripped) out.tripped = false;
+    if (state.closed && state.c.parts.some(c => c.blown) && !out.I && !(out.msg && out.msg.kind === 'short')) {
+      out.msg = {kind:'warn', text:(tripped ? '🧯 Siguranța a ars!' : '🧯 Siguranță arsă') + ' — circuitul e întrerupt. Selecteaz-o și apasă „Înlocuiește siguranța”.'};
+    }
+    return out;
+  }
+  function solveCore() {
     const C = state.c, P = C.parts, N = P.length * 2;
     const out = {I:0, P:0, brightness:0, branches:[], comp:new Map(), wireI:C.wires.map(() => 0), l3:null};
     const ix = new Map(P.map((c, i) => [c.id, i]));
@@ -546,8 +568,8 @@
     const els = [];
     C.wires.forEach((w, k) => els.push({a:node(w.a), b:node(w.b), r:R_WIRE, wire:k}));
     P.forEach((c, i) => {
-      if (c.t === 'res' || c.t === 'bulb') els.push({a:i * 2, b:i * 2 + 1, r:Math.max(c.v, R_WIRE), part:c, i});
-      else if (c.t === 'sw' && !c.open) els.push({a:i * 2, b:i * 2 + 1, r:R_WIRE, part:c, i});
+      if (isLoad(c)) els.push({a:i * 2, b:i * 2 + 1, r:Math.max(c.v, R_WIRE), part:c, i});
+      else if ((isSwitch(c) && !c.open) || (c.t === 'fuse' && !c.blown)) els.push({a:i * 2, b:i * 2 + 1, r:R_WIRE, part:c, i});
     });
     const si = P.findIndex(c => c.t === 'src'), plus = si * 2, minus = si * 2 + 1;
     const A = Array.from({length:N + 1}, () => new Array(N + 1).fill(0)), rhs = new Array(N + 1).fill(0);
@@ -557,14 +579,16 @@
     const x = gauss(A, rhs);
     if (!x) { out.msg = {kind:'info', text:'⛔ Circuit deschis — nu circulă curent (I = 0)'}; return out; }
     const v = x.slice(0, N), is = x[N];
+    const trip = P.filter((c, i) => c.t === 'fuse' && !c.blown && Math.abs((v[i * 2] - v[i * 2 + 1]) / R_WIRE) > c.v);
+    if (trip.length) { trip.forEach(c => { c.blown = true; }); out.tripped = true; return out; }
     if (Math.abs(is) > FUSE_A) { out.short = true; out.msg = {kind:'short', text:'⚡ Scurtcircuit! Siguranță declanșată'}; return out; }
     out.I = is > 1e-5 ? is : 0;
     const zero = i => Math.abs(i) < 1e-5 ? 0 : i;
     els.forEach(e => {
       const I = zero((v[e.a] - v[e.b]) / e.r);
       if (e.wire !== undefined) { out.wireI[e.wire] = I; return; }
-      const c = e.part, p = c.t === 'bulb' || c.t === 'res' ? I * I * Math.max(c.v, R_WIRE) : 0;
-      const b = c.t === 'bulb' ? Math.min(1, Math.sqrt(p / P_MAX)) : 0;
+      const c = e.part, p = isLoad(c) ? I * I * Math.max(c.v, R_WIRE) : 0;
+      const b = LOADS[c.t] && LOADS[c.t].pm ? Math.min(1, Math.sqrt(p / LOADS[c.t].pm)) : 0;
       out.comp.set(c.id, {I, P:p, b, U:Math.abs(v[e.a] - v[e.b])});
       if (c.t === 'bulb') { out.P += p; out.brightness = Math.max(out.brightness, b); }
     });
@@ -574,7 +598,7 @@
     // Componente ocolite (șuntate) de fire sau de un comutator închis
     const low = finder(N);
     els.forEach(e => { if (e.r === R_WIRE) low.join(e.a, e.b); });
-    const shunted = P.filter((c, i) => (c.t === 'res' || c.t === 'bulb') && low.find(i * 2) === low.find(i * 2 + 1));
+    const shunted = P.filter((c, i) => isLoad(c) && low.find(i * 2) === low.find(i * 2 + 1));
     if (shunted.length) out.msg = {kind:'warn', text:'↯ ' + shunted.map(c => TYPE_NAME[c.t]).join(', ') + ' șuntat de un fir — curentul îl ocolește (U = 0)'};
 
     // Date pentru legile Kirchhoff: noduri = pini legați prin fire
@@ -602,7 +626,7 @@
       if (!cand) break;
       seen.add(cand.c.id);
       const cu = out.comp.get(cand.c.id);
-      path.push({name:TYPE_NAME[cand.c.t] + (cand.c.t === 'sw' ? '' : ' ' + cand.c.v + ' Ω'), U:cu ? cu.U : 0});
+      path.push({name:TYPE_NAME[cand.c.t] + (isLoad(cand.c) ? ' ' + cand.c.v + ' Ω' : ''), U:cu ? cu.U : 0});
       cur = wf.find(cand.i * 2 + (1 - cand.p));
     }
     out.l3 = {Rt:V / out.I, junction, path};
@@ -618,8 +642,46 @@
     if (c.t === 'src') {
       line([[-40,0],[-8,0]], COLORS.wire, 4); line([[8,0],[40,0]], COLORS.wire, 4);
       line([[-8,-24],[-8,24]], COLORS.yellow, 4); line([[8,-12],[8,12]], COLORS.blue, 7);
-    } else if (c.t === 'res') {
+    } else if (c.t === 'res' || c.t === 'pot') {
       line([[-40,0],[-26,0],[-20,-12],[-10,12],[0,-12],[10,12],[20,-12],[26,0],[40,0]], COLORS.yellow, 4);
+      if (c.t === 'pot') { line([[-14,24],[14,-24]], COLORS.blue, 3); line([[14,-24],[6,-22]], COLORS.blue, 3); line([[14,-24],[12,-16]], COLORS.blue, 3); }
+    } else if (c.t === 'led') {
+      const b = d.b, g = '#a6e3a1';
+      line([[-40,0],[-10,0]], COLORS.wire, 4); line([[10,0],[40,0]], COLORS.wire, 4);
+      ctx.save();
+      if (b > 0.01) { ctx.shadowColor = g; ctx.shadowBlur = 10 + 50 * b; }
+      ctx.fillStyle = `rgba(166,227,161,${0.08 + 0.9 * b})`; ctx.beginPath(); ctx.moveTo(-10, -15); ctx.lineTo(-10, 15); ctx.lineTo(10, 0); ctx.closePath(); ctx.fill();
+      ctx.restore();
+      const lc = b > 0.01 ? g : '#7f849c';
+      line([[-10,-15],[-10,15],[10,0],[-10,-15]], lc, 3); line([[10,-15],[10,15]], lc, 3);
+      line([[2,-18],[10,-26]], lc, 2); line([[10,-26],[6,-26]], lc, 2); line([[10,-26],[10,-22]], lc, 2);
+      line([[10,-14],[18,-22]], lc, 2); line([[18,-22],[14,-22]], lc, 2); line([[18,-22],[18,-18]], lc, 2);
+    } else if (c.t === 'motor') {
+      line([[-40,0],[-20,0]], COLORS.wire, 4); line([[20,0],[40,0]], COLORS.wire, 4);
+      ctx.strokeStyle = d.I > 0.001 ? COLORS.blue : '#7f849c'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(0, 0, 20, 0, 7); ctx.stroke();
+      const an = performance.now() / 1000 * Math.min(d.I, 3) * 6;
+      ctx.save(); ctx.rotate(vert ? -Math.PI / 2 : 0);
+      line([[0,0],[14 * Math.cos(an), 14 * Math.sin(an)]], COLORS.yellow, 3); line([[0,0],[-14 * Math.cos(an), -14 * Math.sin(an)]], COLORS.yellow, 3);
+      ctx.restore();
+    } else if (c.t === 'heater') {
+      const b = d.b;
+      line([[-40,0],[-26,0]], COLORS.wire, 4); line([[26,0],[40,0]], COLORS.wire, 4);
+      ctx.save();
+      if (b > 0.01) { ctx.shadowColor = '#fab387'; ctx.shadowBlur = 10 + 40 * b; }
+      ctx.fillStyle = `rgba(250,179,135,${0.08 + 0.8 * b})`; ctx.fillRect(-26, -14, 52, 28);
+      ctx.restore();
+      ctx.strokeStyle = b > 0.01 ? '#fab387' : '#7f849c'; ctx.lineWidth = 3; ctx.strokeRect(-26, -14, 52, 28);
+      line([[-18,6],[-12,-6],[-6,6],[0,-6],[6,6],[12,-6],[18,6]], b > 0.01 ? '#fff' : '#7f849c', 2);
+    } else if (c.t === 'fuse') {
+      line([[-40,0],[-24,0]], COLORS.wire, 4); line([[24,0],[40,0]], COLORS.wire, 4);
+      ctx.strokeStyle = c.blown ? COLORS.red : COLORS.yellow; ctx.lineWidth = 3; ctx.strokeRect(-24, -9, 48, 18);
+      if (c.blown) { line([[-24,0],[-6,0]], COLORS.red, 2); line([[6,0],[24,0]], COLORS.red, 2); line([[-4,-6],[4,6]], COLORS.red, 2); }
+      else line([[-24,0],[24,0]], COLORS.yellow, 2);
+    } else if (c.t === 'btn') {
+      line([[-40,0],[-26,0]], COLORS.wire, 4); line([[26,0],[40,0]], COLORS.wire, 4);
+      ctx.fillStyle = COLORS.blue; [-26, 26].forEach(px => { ctx.beginPath(); ctx.arc(px, 0, 4, 0, 7); ctx.fill(); });
+      const yy = c.open ? -10 : -1, bc = c.open ? COLORS.blue : COLORS.yellow;
+      line([[-26,yy],[26,yy]], bc, 4); line([[0,yy],[0,yy - 14]], bc, 4); line([[-9,yy - 14],[9,yy - 14]], bc, 5);
     } else if (c.t === 'sw') {
       const a = (c.open ? -28 : 0) * Math.PI / 180;
       line([[-40,0],[-26,0]], COLORS.wire, 4); line([[26,0],[40,0]], COLORS.wire, 4);
@@ -636,8 +698,8 @@
       line([[-9,9],[-5,-5],[-2,5],[2,-5],[5,5],[9,-5]], b > 0.01 ? '#fff' : '#7f849c', 2.5);
     }
     ctx.restore();
-    const txt = c.t === 'src' ? '12 V' : c.t === 'sw' ? (c.open ? 'DESCHIS' : 'ÎNCHIS') : c.v + ' Ω';
-    const col = c.t === 'res' ? COLORS.yellow : c.t === 'src' ? COLORS.blue : COLORS.text;
+    const txt = c.t === 'src' ? '12 V' : c.t === 'btn' ? (c.open ? 'APASĂ' : 'APĂSAT') : isSwitch(c) ? (c.open ? 'DESCHIS' : 'ÎNCHIS') : c.t === 'fuse' ? (c.blown ? 'ARSĂ' : c.v + ' A') : c.v + ' Ω';
+    const col = isLoad(c) && c.t !== 'bulb' ? COLORS.yellow : c.t === 'src' ? COLORS.blue : c.blown ? COLORS.red : COLORS.text;
     const cur = d.I > 0.0005 ? d.I.toFixed(2) + ' A' : '';
     if (vert) { label(txt, c.x + 36, c.y - 2, col, 13, 'left'); if (cur) label(cur, c.x + 36, c.y + 14, COLORS.blue, 12, 'left'); }
     else { label(txt, c.x, c.y - 36, col, 13); if (cur) label(cur, c.x, c.y + 50, COLORS.blue, 12); }
@@ -691,7 +753,7 @@
   }
 
   // ---------- editor ----------
-  const describe = c => TYPE_NAME[c.t] + (c.t === 'res' || c.t === 'bulb' ? ' ' + c.v + ' Ω' : c.t === 'sw' ? (c.open ? ' (deschis)' : ' (închis)') : '');
+  const describe = c => TYPE_NAME[c.t] + (hasVal(c) ? ' ' + c.v + unitOf(c) : isSwitch(c) ? (c.open ? ' (deschis)' : ' (închis)') : '');
   let noteTimer = 0;
   function note(text) {
     $('selBox').textContent = text; clearTimeout(noteTimer);
@@ -710,7 +772,9 @@
     } else {
       const c = partById(state.sel.id);
       h = '<b>' + TYPE_NAME[c.t] + ' selectat</b>';
-      if (c.t === 'res' || c.t === 'bulb') h += '<div class="row"><input id="valIn" type="number" aria-label="Valoare în ohmi" min="' + (c.t === 'bulb' ? 1 : 0) + '" max="' + (c.t === 'bulb' ? 100 : 500) + '" step="1" value="' + c.v + '"> Ω</div>';
+      if (hasVal(c)) h += '<div class="row"><input id="valIn" type="number" aria-label="Valoare" min="' + RNG(c.t)[0] + '" max="' + RNG(c.t)[1] + '" step="' + (c.t === 'fuse' ? '0.5' : '1') + '" value="' + c.v + '">' + unitOf(c) + '</div>';
+      if (c.t === 'fuse' && c.blown) h += '<button type="button" id="fuseFix">🧯 Înlocuiește siguranța</button>';
+      if (c.t === 'btn') h += '<div style="color:#9399b2">Ține apăsat pe el pe schemă: conduce doar cât timp îl apeși.</div>';
       if (c.t === 'sw') h += '<button type="button" id="swTog">' + (c.open ? 'Închide' : 'Deschide') + ' comutatorul</button>';
       if (c.t === 'src') h += '<div style="color:#9399b2">Sursă fixă de 12 V — poate fi mutată și rotită.</div>';
       h += '<button type="button" id="rotSel">⟳ Rotește (R)</button>';
@@ -728,7 +792,7 @@
   function addComp(t, at, silent) {
     if (state.c.parts.length >= MAX_PARTS) { note('Ai atins maximum ' + MAX_PARTS + ' componente. Șterge una ca să adaugi alta.'); return false; }
     const p = freeSpot(at), val = parseFloat($('addVal').value);
-    const v = t !== 'sw' && Number.isFinite(val) ? Math.min(t === 'bulb' ? 100 : 500, Math.max(1, val)) : undefined;
+    const v = hasVal({t}) && Number.isFinite(val) ? Math.min(RNG(t)[1], Math.max(Math.max(1, RNG(t)[0]), val)) : undefined;
     const c = mk(t, p.x, p.y, 0, v);
     state.c.parts.push(c); state.sel = {kind:'part', id:c.id}; if (!silent) showSym(SYM_OF[t]); changed();
     return true;
@@ -771,7 +835,7 @@
     if (e.target.id !== 'valIn' || !state.sel || state.sel.kind !== 'part') return;
     const c = partById(state.sel.id), v = parseFloat(e.target.value);
     if (!c || !Number.isFinite(v)) return;
-    c.v = Math.min(c.t === 'bulb' ? 100 : 500, Math.max(c.t === 'bulb' ? 1 : 0, v)); saveC();
+    c.v = Math.min(RNG(c.t)[1], Math.max(RNG(c.t)[0], v)); saveC();
   });
   $('selBox').addEventListener('change', e => { if (e.target.id === 'valIn') refreshEditor(); });
   $('selBox').addEventListener('click', e => {
@@ -779,6 +843,7 @@
     if (id === 'delSel') deleteSel();
     else if (id === 'resetWire' && state.sel && state.sel.kind === 'wire') { const w = state.c.wires[state.sel.i]; if (w) { w.pts = null; saveC(); } }
     else if (id === 'rotSel') rotateSel();
+    else if (id === 'fuseFix' && state.sel) { const c = partById(state.sel.id); if (c) { c.blown = false; changed(); } }
     else if (id === 'swTog' && state.sel) { const c = partById(state.sel.id); if (c) { c.open = !c.open; refreshEditor(); saveC(); } }
   });
   document.querySelector('[data-preset]').parentNode.addEventListener('click', e => {
@@ -839,6 +904,7 @@
     const c = partAt(x, y);
     if (c) {
       state.sel = {kind:'part', id:c.id}; state.drag = {id:c.id, dx:c.x - x, dy:c.y - y, moved:false, sx:x, sy:y};
+      if (c.t === 'btn') c.open = false;
       showSym(SYM_OF[c.t]); refreshEditor(); cv.setPointerCapture(e.pointerId); return;
     }
     const h = wireHit(x, y);
@@ -858,7 +924,7 @@
       cv.style.cursor = hit(x, y) ? 'pointer' : 'default'; return;
     }
     state.mouse = [x, y];
-    if (!e.buttons && (state.drag || state.wdrag || state.wd)) { state.drag = null; state.wdrag = false; state.wd = null; changed(); }
+    if (!e.buttons && (state.drag || state.wdrag || state.wd)) { releaseBtns(); state.drag = null; state.wdrag = false; state.wd = null; changed(); }
     if (state.wd) {
       dragWire(state.wd, x, y); state.wd.moved = true;
       cv.style.cursor = state.wd.horiz ? 'ns-resize' : 'ew-resize'; return;
@@ -874,8 +940,10 @@
     const hh = state.hoverPin || partAt(x, y) ? null : wireHit(x, y);
     cv.style.cursor = state.hoverPin ? 'crosshair' : partAt(x, y) ? 'pointer' : hh ? (draggableSeg(hh) ? (Math.abs(hh.pts[hh.seg].y - hh.pts[hh.seg + 1].y) < 0.5 ? 'ns-resize' : 'ew-resize') : 'pointer') : 'default';
   });
+  const releaseBtns = () => state.c.parts.forEach(c => { if (c.t === 'btn') c.open = true; });
   function endPointer(e) {
     if (state.level !== 3) return;
+    releaseBtns();
     const [x, y] = canvasPos(e), d = state.drag;
     if (state.wd) { state.wd = null; changed(); }
     if (state.wdrag) {
@@ -891,7 +959,7 @@
     }
   }
   cv.addEventListener('pointerup', endPointer);
-  cv.addEventListener('pointercancel', () => { state.drag = null; state.wdrag = false; state.wd = null; });
+  cv.addEventListener('pointercancel', () => { releaseBtns(); state.drag = null; state.wdrag = false; state.wd = null; });
   cv.addEventListener('pointerleave', () => { state.hoverPin = null; });
   document.addEventListener('keydown', e => {
     if (state.level !== 3 || $('game').hidden || !$('rules').hidden) return;
@@ -1012,6 +1080,12 @@
     switch:['⎯/⎯ Comutatorul','Închide sau deschide circuitul. Închis: curentul circulă. Deschis: circuit întrerupt, I = 0, becul e stins. Click pe el îl comută.'],
     resistor:['⌇ Rezistorul','Limitează curentul și transformă energia în căldură. Simbolul în zig-zag; valoarea în Ω este scrisă lângă el.'],
     bulb:['💡 Becul','Rezistență (6 Ω implicit, editabilă în Nivelul 3) care transformă energia în lumină. Cercul cu filament este simbolul lui; strălucirea crește cu puterea P.'],
+    pot:['🎚️ Reostatul (rezistor variabil)','Rezistor a cărui valoare o poți regla (1–500 Ω) selectându-l. Simbolul: zig-zag cu o săgeată oblică. Folosit pentru a regla curentul sau luminozitatea.'],
+    led:['🟢 LED-ul','Diodă luminoasă: consumă puțin și luminează eficient. Aici e modelat ca o rezistență de 60 Ω (cu rezistorul de limitare inclus); strălucirea crește cu puterea P = I²·R.'],
+    motor:['⚙️ Motorul','Transformă energia electrică în mișcare. Aici e modelat ca o rezistență de 8 Ω; cu cât curentul I e mai mare, cu atât se rotește mai repede.'],
+    heater:['🔥 Încălzitorul','Rezistență mare care transformă energia în căldură (efectul Joule: P = I²·R). Se înroșește/luminează portocaliu pe măsură ce puterea crește.'],
+    fuse:['🧯 Siguranța fuzibilă','Protejează circuitul: conduce normal, dar dacă curentul depășește valoarea ei (în A) „arde” și întrerupe circuitul. O poți înlocui din panou după ce o selectezi.'],
+    btn:['🔘 Butonul (momentan)','Conduce doar cât timp îl ții apăsat cu mouse-ul; când îl eliberezi, circuitul se întrerupe. Spre deosebire de comutator, nu rămâne în poziție.'],
     wire:['⎯ Firul (conductor ideal)','Rezistență 0 Ω. Pus în paralel cu alte componente le „șuntează”: curentul ocolește componentele și, dacă nimic nu limitează curentul, apare scurtcircuit.'],
     gap:['⎯ ⎯ Întreruperea (fir tăiat)','Un loc unde circuitul e întrerupt: rezistență infinită, deci I = 0 pe acea cale. Un circuit deschis nu are curent și becul rămâne stins.'],
     ohm:['Ω — Ohm','Unitatea de măsură a rezistenței. 1 Ω = 1 V / 1 A.'],
