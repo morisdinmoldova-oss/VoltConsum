@@ -404,5 +404,36 @@
       <div class="modal-actions"><button class="button button-outline" id="cancel-solar">Anulează</button><button class="button button-primary" id="save-solar">Salvează estimarea</button></div>
     </section>
   </div>
+  <button id="cm-fab" class="cm-fab" type="button" aria-haspopup="dialog" aria-label="Deschide jocul Circuit Master" title="Joacă Circuit Master">🎮<span>Circuit Master</span></button>
+  <div id="cm-modal" class="cm-modal" role="dialog" aria-modal="true" aria-label="Circuit Master" hidden>
+    <div class="cm-box">
+      <button id="cm-close" class="cm-close" type="button" aria-label="Închide jocul">✕</button>
+      <iframe id="cm-frame" title="Circuit Master" allow="fullscreen"></iframe>
+    </div>
+  </div>
+  <style>
+    .cm-fab{position:fixed;right:16px;bottom:16px;z-index:900;display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;border:1px solid #89b4fa;background:#1e1e2e;color:#f9e2af;font:700 12px "Segoe UI",system-ui,sans-serif;cursor:pointer;box-shadow:0 0 12px rgba(137,180,250,.45);animation:cm-pulse 2s infinite alternate}
+    .cm-fab{font-size:15px}.cm-fab span{font-size:12px;color:#89b4fa}
+    .cm-fab:hover,.cm-fab:focus-visible{transform:translateY(-2px);box-shadow:0 0 28px rgba(249,226,175,.6);outline:none}
+    @keyframes cm-pulse{to{box-shadow:0 0 30px rgba(137,180,250,.8)}}
+    .cm-modal{position:fixed;inset:0;z-index:2000;background:rgba(10,10,18,.8);display:flex;align-items:center;justify-content:center;padding:2vh 2vw}
+    .cm-modal[hidden]{display:none}
+    .cm-box{position:relative;width:min(1200px,100%);height:min(900px,96vh);background:#1e1e2e;border:1px solid #89b4fa;border-radius:14px;overflow:hidden;box-shadow:0 0 40px rgba(137,180,250,.35)}
+    .cm-box iframe{width:100%;height:100%;border:0;display:block;background:#1e1e2e}
+    .cm-close{position:absolute;top:10px;right:12px;z-index:2;width:38px;height:38px;border-radius:50%;border:1px solid #f38ba8;background:#181825;color:#f38ba8;font-size:18px;cursor:pointer}
+    .cm-close:hover,.cm-close:focus-visible{background:#f38ba8;color:#1e1e2e;outline:none}
+    @media(prefers-reduced-motion:reduce){.cm-fab{animation:none}}
+  </style>
+  <script>
+    (function(){
+      var fab=document.getElementById("cm-fab"),modal=document.getElementById("cm-modal"),frame=document.getElementById("cm-frame"),closeBtn=document.getElementById("cm-close");
+      function open(){frame.src="circuit-master/index.html?embed=1";modal.hidden=false;document.body.style.overflow="hidden";closeBtn.focus()}
+      function close(){modal.hidden=true;frame.removeAttribute("src");frame.src="about:blank";document.body.style.overflow="";fab.focus()}
+      fab.addEventListener("click",open);
+      closeBtn.addEventListener("click",close);
+      modal.addEventListener("click",function(e){if(e.target===modal)close()});
+      document.addEventListener("keydown",function(e){if(e.key==="Escape"&&!modal.hidden)close()});
+    })();
+  </script>
 </body>
 </html>

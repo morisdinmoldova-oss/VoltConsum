@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Circuit Master — Puzzle de circuite electrice</title>
+<style>
+  :root{--bg:#1e1e2e;--panel:#181825;--line:#313244;--text:#cdd6f4;--muted:#9399b2;--blue:#89b4fa;--yellow:#f9e2af;--red:#f38ba8;--green:#a6e3a1}
+  *{box-sizing:border-box}
+  *{scrollbar-width:thin;scrollbar-color:#45475a #181825}
+  ::-webkit-scrollbar{width:10px;height:10px}
+  ::-webkit-scrollbar-track{background:#181825}
+  ::-webkit-scrollbar-thumb{background:#45475a;border-radius:8px;border:2px solid #181825}
+  ::-webkit-scrollbar-thumb:hover{background:#89b4fa}
+  ::-webkit-scrollbar-corner{background:#181825}
+  html{background:#1e1e2e}
+  body{margin:0;min-height:100vh;background:var(--bg);color:var(--text);font-family:"Segoe UI",system-ui,sans-serif;display:flex;flex-direction:column}
+  header{display:flex;align-items:center;gap:14px;padding:14px 22px;border-bottom:1px solid var(--line);background:var(--panel)}
+  h1{margin:0;font-size:22px;letter-spacing:.5px;color:var(--blue);text-shadow:0 0 14px rgba(137,180,250,.45)}
+  h1 span{color:var(--yellow)}
+  .layout{display:grid;grid-template-columns:320px minmax(0,1fr);gap:18px;padding:18px;flex:1}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:18px}
+  .group>label,.group>.lbl{display:block;font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:8px}
+  .levels{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  button{font:inherit;cursor:pointer;border-radius:10px;border:1px solid var(--line);background:#11111b;color:var(--text);padding:10px 12px;transition:.2s}
+  button:hover{border-color:var(--blue)}
+  button:focus-visible,input:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+  .levels button.active{border-color:var(--blue);color:var(--blue);box-shadow:0 0 12px rgba(137,180,250,.35)}
+  .levels small{display:block;color:var(--muted);font-size:11px}
+  .voltage{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border:1px dashed var(--blue);border-radius:10px;color:var(--blue)}
+  .voltage b{font-size:22px;font-family:Consolas,monospace}
+  .voltage small{color:var(--muted)}
+  input[type=range]{width:100%;accent-color:var(--blue)}
+  .rval{display:flex;justify-content:space-between;font-family:Consolas,monospace;color:var(--yellow);margin-bottom:6px}
+  #switchBtn{width:100%;font-weight:700;font-size:16px}
+  #switchBtn.on{background:rgba(249,226,175,.12);border-color:var(--yellow);color:var(--yellow);box-shadow:0 0 14px rgba(249,226,175,.3)}
+  .readouts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .read{background:#11111b;border:1px solid var(--line);border-radius:10px;padding:12px}
+  .read span{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+  .read b{font:700 24px Consolas,monospace;color:var(--yellow)}
+  .read small{color:var(--muted)}
+  .bulb-icon{width:34px;height:34px;border-radius:50%;margin:0 auto 6px;background:rgba(249,226,175,.08);border:2px solid var(--line);transition:box-shadow .15s,background .15s}
+  .formula{font:12px Consolas,monospace;color:var(--muted);line-height:1.7}
+  .stage{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
+  canvas{display:block;width:100%;height:auto;aspect-ratio:900/520;cursor:default}
+  #alert{position:static;margin:10px auto 0;display:none;padding:10px 20px;border-radius:10px;background:rgba(243,139,168,.15);border:1px solid var(--red);color:var(--red);font-weight:700;box-shadow:0 0 22px rgba(243,139,168,.45);text-align:center;max-width:92%}
+  #alert.show{display:block;animation:blink .5s infinite alternate}
+  @keyframes blink{to{box-shadow:0 0 6px rgba(243,139,168,.2)}}
+  #hint{padding:10px 16px;border-top:1px solid var(--line);color:var(--muted);font-size:13px}
+  .mini{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}
+  select,#valIn{width:100%;font:inherit;background:#11111b;color:var(--text);border:1px solid var(--line);border-radius:8px;padding:8px;margin-bottom:8px}
+  .addrow{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+  .addrow button{padding:7px 10px;font-size:13px}
+  .selbox{font-size:13px;line-height:1.5;padding:10px;background:#11111b;border:1px dashed var(--line);border-radius:10px;margin-bottom:12px;display:flex;flex-direction:column;gap:8px}
+  .selbox .row{display:flex;gap:8px;align-items:center}
+  .selbox .row input{flex:1;margin:0}
+  .chips button.sel{border-color:var(--blue);color:var(--blue)}
+  #compList button{font-size:12px;padding:6px 10px}
+  #alert.info{background:rgba(137,180,250,.15);border-color:var(--blue);color:var(--blue);box-shadow:0 0 22px rgba(137,180,250,.4)}
+  #alert.warn{background:rgba(249,226,175,.12);border-color:var(--yellow);color:var(--yellow);box-shadow:0 0 22px rgba(249,226,175,.35)}
+  .rules{position:fixed;inset:0;z-index:50;background:rgba(10,10,18,.92);display:flex;align-items:center;justify-content:center;padding:16px;overflow:auto}
+  .rules-box{max-width:680px;width:100%;background:var(--panel);border:1px solid var(--blue);border-radius:14px;padding:22px;box-shadow:0 0 30px rgba(137,180,250,.3);max-height:94vh;overflow:auto}
+  .rules-box h2{margin:0 0 12px;color:var(--blue)}
+  .rules-box h3{margin:14px 0 6px;color:var(--yellow);font-size:15px}
+  .rules-box p,.rules-box li{font-size:14px;line-height:1.6;margin:4px 0}
+  .rules-box ul{margin:4px 0;padding-left:20px}
+  .rules-box .warn{border:1px solid var(--red);background:rgba(243,139,168,.1);color:var(--red);padding:10px;border-radius:8px;margin-top:10px}
+  .rules-box code{font-family:Consolas,monospace;color:var(--yellow)}
+  #playBtn{margin-top:16px;width:100%;font-weight:700;font-size:16px;background:rgba(249,226,175,.12);border-color:var(--yellow);color:var(--yellow)}
+  .back[hidden]{display:none}
+  .embed header{padding-right:64px}
+  [hidden]{display:none!important}
+  #game{display:flex;flex-direction:column;flex:1}
+  .back{margin-left:auto;padding:8px 14px}
+  /* Consola */
+  #consoleScreen{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:24px;text-align:center}
+  .console{all:unset;box-sizing:border-box;cursor:pointer;width:min(440px,92vw);background:linear-gradient(160deg,#313244,#181825);border:2px solid #45475a;border-radius:26px;padding:18px;display:grid;grid-template-columns:70px 1fr 70px;gap:12px;align-items:center;box-shadow:0 14px 40px rgba(0,0,0,.6),0 0 0 1px #11111b inset;transition:transform .2s,box-shadow .2s}
+  .console:hover,.console:focus-visible{transform:translateY(-4px);box-shadow:0 26px 70px rgba(0,0,0,.6),0 0 34px rgba(137,180,250,.35);outline:none}
+  .console:focus-visible{outline:2px solid var(--blue);outline-offset:4px}
+  .dpad{position:relative;width:56px;height:56px;margin:auto}
+  .dpad i{position:absolute;background:#11111b;border-radius:4px}
+  .dpad i:nth-child(1){left:19px;top:0;width:18px;height:56px}
+  .dpad i:nth-child(2){left:0;top:19px;width:56px;height:18px}
+  .screen{background:#0b0b13;border:3px solid #45475a;border-radius:12px;padding:12px 8px;min-height:100px;display:flex;flex-direction:column;justify-content:center;gap:6px;box-shadow:0 0 22px rgba(137,180,250,.25) inset}
+  .screen b{font:700 17px Consolas,monospace;color:var(--blue);text-shadow:0 0 12px rgba(137,180,250,.7)}
+  .screen em{font:normal 13px Consolas,monospace;color:var(--yellow);animation:pulse 1.2s infinite alternate}
+  @keyframes pulse{from{opacity:.25}to{opacity:1}}
+  .abtn{display:flex;gap:12px;justify-content:center;transform:rotate(-20deg)}
+  .abtn i{width:28px;height:28px;border-radius:50%;background:var(--yellow);color:#1e1e2e;font:700 13px Consolas,monospace;display:grid;place-items:center;box-shadow:0 3px 0 #b59f6b;font-style:normal}
+  .abtn i:last-child{background:var(--blue);box-shadow:0 4px 0 #5a7fb8}
+  .power{grid-column:1/-1;display:flex;justify-content:center;gap:10px;align-items:center;color:var(--muted);font-size:12px;letter-spacing:2px}
+  .led{width:10px;height:10px;border-radius:50%;background:var(--green);box-shadow:0 0 10px var(--green)}
+  /* Teorie */
+  .info{margin:0 18px 18px;display:grid;gap:18px;grid-template-columns:1fr 1fr}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px}
+  .card h2{margin:0 0 10px;font-size:16px;color:var(--blue)}
+  .tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+  .tabs button{padding:7px 12px;font-size:13px}
+  .tabs button.active{border-color:var(--yellow);color:var(--yellow)}
+  .law{line-height:1.6;font-size:14px}
+  .law .eq{font:700 18px Consolas,monospace;color:var(--yellow);margin:8px 0;display:block}
+  .law .live{margin-top:10px;padding:10px;border-left:3px solid var(--blue);background:#11111b;border-radius:6px;font:13px Consolas,monospace;color:var(--text)}
+  .chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+  .chips button{font:700 15px Consolas,monospace;padding:8px 14px;color:var(--yellow)}
+  #symInfo{font-size:14px;line-height:1.6;min-height:96px;padding:12px;background:#11111b;border-radius:10px;border:1px dashed var(--line)}
+  #symInfo b{color:var(--blue)}
+  @media(max-width:900px){.info{grid-template-columns:1fr}.console{grid-template-columns:1fr}.dpad,.abtn{display:none}}
+  @media(max-width:900px){.layout{grid-template-columns:1fr}}
+  @media(prefers-reduced-motion:reduce){#alert.show{animation:none}}
+</style>
+</head>
+<body>
+<section id="consoleScreen">
+  <h1>Consolă de jocuri</h1>
+  <button class="console" id="consoleBtn" type="button" aria-label="Apasă pe consolă pentru a porni jocul Circuit Master">
+    <div class="dpad" aria-hidden="true"><i></i><i></i></div>
+    <div class="screen"><b>CIRCUIT MASTER</b><span style="color:#9399b2;font-size:12px">Puzzle de circuite electrice</span><em>▶ APASĂ PE CONSOLĂ</em></div>
+    <div class="abtn" aria-hidden="true"><i>A</i><i>B</i></div>
+    <div class="power"><span class="led"></span> POWER</div>
+  </button>
+  <p style="color:#9399b2;margin:0">Jocul se deschide doar după ce apeși pe consolă.</p>
+</section>
+<div id="game" hidden>
+<header><h1>Circuit <span>Master</span></h1><button class="back" id="infoBtn" type="button" aria-label="Informații și regulament">ℹ️ Regulament</button><button class="back" id="backBtn" type="button" style="margin-left:0">⏏ Înapoi la consolă</button></header>
+<div class="rules" id="rules" role="dialog" aria-modal="true" aria-labelledby="rulesTitle" hidden>
+  <div class="rules-box">
+    <h2 id="rulesTitle">ℹ️ Cum se joacă</h2>
+    <h3>🎯 Obiectiv</h3>
+    <p>Creează un circuit funcțional care să aprindă becul, fără să provoci scurtcircuit.</p>
+    <h3>🕹️ Controale</h3>
+    <ul>
+      <li><b>Comutator (Pornit/Oprit):</b> butonul din panou sau click pe comutatorul din schemă. Închis = curentul circulă; deschis = becul se stinge.</li>
+      <li><b>Slider rezistență (0–50 Ω):</b> schimbă valoarea rezistorului.</li>
+      <li><b>Selector Serie/Paralel:</b> Nivel 1 = rezistor și bec în serie; Nivel 2 = în paralel.</li>
+      <li><b>Nivel 3 — Editor liber:</b> adaugi rezistoare, becuri, comutatoare, fire și întreruperi în serie sau în ramuri paralele, le selectezi (click) și le modifici valoarea sau le ștergi. Scenariile „Scurtcircuit” și „Circuit deschis” le văd instant.</li>
+    </ul>
+    <h3>⚡ Fizica</h3>
+    <ul>
+      <li>Legea lui Ohm: <code>I = V / R</code> (V = 12 V fix).</li>
+      <li>Puterea: <code>P = V² / R</code> (pentru bec, echivalent cu <code>I²·R</code>). Cu cât P e mai mare, cu atât becul strălucește mai tare.</li>
+      <li>Serie: <code>R<sub>total</sub> = R + R<sub>bec</sub></code>. Paralel: fiecare ramură are 12 V, iar curenții se adună.</li>
+    </ul>
+    <div class="warn">⚠️ <b>Scurtcircuit:</b> la 0 Ω cu comutatorul închis, curentul ar fi nelimitat. Apar scântei și mesajul „Scurtcircuit! Siguranță declanșată”, curentul devine 0 și becul se stinge.</div>
+    <button id="playBtn" type="button">Am înțeles / Joacă acum!</button>
+  </div>
+</div>
+<main class="layout">
+  <section class="panel" aria-label="Panou de control">
+    <div class="group">
+      <span class="lbl">Nivel</span>
+      <div class="levels">
+        <button id="lv1" class="active" type="button">Nivel 1<small>Circuit Serie</small></button>
+        <button id="lv2" type="button">Nivel 2<small>Circuit Paralel</small></button>
+        <button id="lv3" type="button" style="grid-column:1/-1">Nivel 3 — Editor liber<small>Adaugi, muți și modifici componente</small></button>
+      </div>
+    </div>
+    <div class="group">
+      <span class="lbl">Tensiune</span>
+      <div class="voltage"><div><small>Sursă fixă</small><br>DC</div><b>12 V</b></div>
+    </div>
+    <div class="group" id="editor" hidden>
+      <span class="lbl">Editor schemă</span>
+      <label class="mini" for="tgt">Adaugă în:</label>
+      <select id="tgt"></select>
+      <div class="addrow">
+        <button type="button" data-add="res">＋ Rezistor</button>
+        <button type="button" data-add="bulb">＋ Bec</button>
+        <button type="button" data-add="sw">＋ Comutator</button>
+        <button type="button" data-add="wire">＋ Fir (scurt)</button>
+        <button type="button" data-add="gap">＋ Întrerupere</button>
+      </div>
+      <div class="addrow">
+        <button type="button" id="addBranch">＋ Ramură paralelă</button>
+        <button type="button" id="delBranch">🗑 Șterge ramura</button>
+      </div>
+      <div class="selbox" id="selBox">Selectează o componentă (click pe schemă sau în listă) ca să o modifici.</div>
+      <span class="lbl">Componente</span>
+      <div class="chips" id="compList"></div>
+      <span class="lbl">Scenarii</span>
+      <div class="addrow">
+        <button type="button" data-preset="normal">✔ Normal</button>
+        <button type="button" data-preset="short">⚡ Scurtcircuit</button>
+        <button type="button" data-preset="shunt">↯ Ramură șuntată</button>
+        <button type="button" data-preset="open">⛔ Circuit deschis</button>
+      </div>
+    </div>
+    <div class="group" id="rGroup">
+      <label for="rSlider">Rezistență (rezistor)</label>
+      <div class="rval"><span>R =</span><span id="rLabel">20 Ω</span></div>
+      <input id="rSlider" type="range" min="0" max="50" step="1" value="20">
+    </div>
+    <div class="group">
+      <span class="lbl">Comutator</span>
+      <button id="switchBtn" type="button" aria-pressed="false">Deschis — apasă pentru a închide</button>
+    </div>
+    <div class="readouts">
+      <div class="read"><span>Curent</span><b id="iOut">0.00</b> <small>A</small></div>
+      <div class="read"><div class="bulb-icon" id="bulbIcon"></div><span>Putere bec</span><b id="pOut">0.0</b> <small>W</small></div>
+    </div>
+    <div class="formula" id="formula"></div>
+  </section>
+  <section class="stage">
+    <canvas id="c" width="900" height="520" aria-label="Schema circuitului electric"></canvas>
+    <div id="alert" role="alert">⚡ Scurtcircuit! Siguranță declanșată</div>
+    <div id="hint"></div>
+  </section>
+</main>
+<section class="info">
+  <div class="card">
+    <h2>📘 Legile circuitelor</h2>
+    <div class="tabs" role="tablist">
+      <button type="button" data-law="ohm" class="active">Legea lui Ohm</button>
+      <button type="button" data-law="kcl">Kirchhoff I (curenți)</button>
+      <button type="button" data-law="kvl">Kirchhoff II (tensiuni)</button>
+    </div>
+    <div class="law" id="lawBox"></div>
+  </div>
+  <div class="card">
+    <h2>🔣 Simboluri — apasă pe ele</h2>
+    <div class="chips" id="chips">
+      <button type="button" data-sym="V">V</button><button type="button" data-sym="I">I</button>
+      <button type="button" data-sym="R">R</button><button type="button" data-sym="P">P</button>
+      <button type="button" data-sym="source">🔋 Sursă</button><button type="button" data-sym="switch">⎯/⎯ Comutator</button>
+      <button type="button" data-sym="resistor">⌇ Rezistor</button><button type="button" data-sym="bulb">💡 Bec</button>
+      <button type="button" data-sym="ohm">Ω</button><button type="button" data-sym="amp">A</button><button type="button" data-sym="watt">W</button>
+      <button type="button" data-sym="wire">⎯ Fir</button><button type="button" data-sym="gap">⎯ ⎯ Întrerupere</button>
+    </div>
+    <div id="symInfo">Apasă pe un simbol de mai sus sau direct pe o componentă din schemă (sursă, comutator, rezistor, bec) ca să afli ce reprezintă.</div>
+  </div>
+</section>
+</div>
+<script>
+(() => {
+  const V = 12, R_BULB = 6, P_MAX = V * V / R_BULB;
+  const cv = document.getElementById('c'), ctx = cv.getContext('2d');
+  const $ = id => document.getElementById(id);
+  const slider = $('rSlider'), swBtn = $('switchBtn'), alertEl = $('alert');
+  const COLORS = {bg:'#1e1e2e', wire:'#585b70', blue:'#89b4fa', yellow:'#f9e2af', red:'#f38ba8', text:'#cdd6f4'};
+  const state = {level:1, R:20, closed:false, swAngle:0, sparks:[], particles:[], routes:[], tripped:false};
+
+  // Geometrie: bucla principală între x=150..760, y=100..420
+  const L = 150, T = 100, B = 420;
+  const COMP = {
+    source:{x:L, y:260}, sw:{x:330, y:T}, res1:{x:560, y:T}, bulb1:{x:760, y:260},
+    res2:{x:580, y:260}, bulb2:{x:760, y:260}
+  };
+
+  function physics() {
+    if (state.level === 3) return solve3();
+    const R = state.R, on = state.closed;
+    const out = {I:0, P:0, brightness:0, branches:[]};
+    if (!on) return out;
+    if (R === 0) { out.short = true; return out; }
+    if (state.level === 1) {
+      const I = V / (R + R_BULB);
+      out.I = I; out.P = I * I * R_BULB; out.brightness = Math.sqrt(out.P / P_MAX);
+      out.branches = [I];
+    } else {
+      const iR = V / R, iB = V / R_BULB;
+      out.I = iR + iB; out.P = V * V / R_BULB; out.brightness = 1;
+      out.branches = [iR, iB];
+    }
+    return out;
+  }
+
+  function buildRoutes() {
+    const pts = p => p.map(a => ({x:a[0], y:a[1]}));
+    if (state.level === 3) {
+      state.routes = routes3();
+    } else if (state.level === 1) {
+      state.routes = [pts([[L,B],[L,T],[760,T],[760,B]])];
+    } else {
+      state.routes = [
+        pts([[L,B],[L,T],[580,T],[580,B]]),
+        pts([[L,B],[L,T],[580,T],[760,T],[760,B],[580,B]])
+      ];
+    }
+    state.routes.forEach(r => {
+      r.push({x:r[0].x, y:r[0].y});
+      r.len = 0; r.seg = [];
+      for (let i = 1; i < r.length; i++) {
+        const d = Math.hypot(r[i].x - r[i-1].x, r[i].y - r[i-1].y);
+        r.seg.push(d); r.len += d;
+      }
+    });
+    state.particles = [];
+    state.routes.forEach((r, ri) => {
+      const n = Math.round(r.len / 38);
+      for (let i = 0; i < n; i++) state.particles.push({route:ri, d:i * r.len / n, color:i % 2 ? COLORS.blue : COLORS.yellow});
+    });
+  }
+  // Ruta paralelă folosește mereu o buclă închisă: ultimul segment revine pe firul de jos
+  function routeFix() {
+    if (state.level === 2) {
+      state.routes[0].splice(state.routes[0].length - 1, 1, {x:L, y:B});
+      state.routes[1].splice(state.routes[1].length - 1, 1, {x:L, y:B});
+      state.routes[0].splice(state.routes[0].length - 1, 0, {x:L, y:B});
+      state.routes.forEach(r => {
+        r.len = 0; r.seg = [];
+        for (let i = 1; i < r.length; i++) {
+          const d = Math.hypot(r[i].x - r[i-1].x, r[i].y - r[i-1].y);
+          r.seg.push(d); r.len += d;
+        }
+      });
+    }
+  }
+
+  function pointAt(r, d) {
+    d = ((d % r.len) + r.len) % r.len;
+    for (let i = 0; i < r.seg.length; i++) {
+      if (d <= r.seg[i]) {
+        const t = r.seg[i] ? d / r.seg[i] : 0;
+        return {x:r[i].x + (r[i+1].x - r[i].x) * t, y:r[i].y + (r[i+1].y - r[i].y) * t};
+      }
+      d -= r.seg[i];
+    }
+    return r[0];
+  }
+
+  function line(pts, color, w) {
+    ctx.strokeStyle = color; ctx.lineWidth = w; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.beginPath(); pts.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])); ctx.stroke();
+  }
+  function label(txt, x, y, color, size, align) {
+    ctx.fillStyle = color || COLORS.text; ctx.font = (size || 15) + 'px Consolas, monospace'; ctx.textAlign = align || 'center'; ctx.fillText(txt, x, y);
+  }
+  function eraseBox(x, y, w, h) { ctx.fillStyle = COLORS.bg; ctx.fillRect(x - w/2, y - h/2, w, h); }
+
+  function drawWires(active) {
+    const col = active ? '#7f849c' : COLORS.wire;
+    line([[L,B],[L,T],[760,T],[760,B],[L,B]], col, 4);
+    if (state.level === 2) line([[580,T],[580,B]], col, 4);
+  }
+
+  function drawSource() {
+    const {x, y} = COMP.source;
+    eraseBox(x, y, 60, 90);
+    line([[x,y-45],[x,y-12]], COLORS.wire, 4); line([[x,y+12],[x,y+45]], COLORS.wire, 4);
+    line([[x-26,y-12],[x+26,y-12]], COLORS.blue, 4); line([[x-14,y+12],[x+14,y+12]], COLORS.blue, 7);
+    label('+', x-40, y-14, COLORS.yellow, 18); label('−', x-40, y+22, COLORS.blue, 18);
+    label('12 V DC', x, y+75, COLORS.blue, 15);
+  }
+
+  function drawSwitch() {
+    const {x, y} = COMP.sw;
+    eraseBox(x, y, 110, 40);
+    const target = state.closed ? 0 : -28;
+    state.swAngle += (target - state.swAngle) * 0.25;
+    const a = state.swAngle * Math.PI / 180;
+    line([[x-55,y],[x-35,y]], COLORS.wire, 4); line([[x+35,y],[x+55,y]], COLORS.wire, 4);
+    ctx.fillStyle = COLORS.blue; [x-35, x+35].forEach(px => { ctx.beginPath(); ctx.arc(px, y, 5, 0, 7); ctx.fill(); });
+    line([[x-35,y],[x-35+70*Math.cos(a), y+70*Math.sin(a)]], state.closed ? COLORS.yellow : COLORS.blue, 5);
+    label(state.closed ? 'ÎNCHIS' : 'DESCHIS', x, y-28, state.closed ? COLORS.yellow : COLORS.muted || '#9399b2', 13);
+  }
+
+  function drawResistor(x, y, vertical) {
+    ctx.save(); ctx.translate(x, y); if (vertical) ctx.rotate(Math.PI/2);
+    eraseBox(0, 0, 100, 40);
+    const z = [[-50,0],[-32,0],[-24,-14],[-12,14],[0,-14],[12,14],[24,-14],[32,0],[50,0]];
+    line(z, COLORS.yellow, 4);
+    ctx.restore();
+    if (vertical) label(state.R + ' Ω', x + 52, y + 5, COLORS.yellow, 16);
+    else label(state.R + ' Ω', x, y - 26, COLORS.yellow, 16);
+  }
+
+  function drawBulb(x, y, brightness) {
+    const r = 30;
+    eraseBox(x, y, 90, 100);
+    ctx.save();
+    if (brightness > 0.01) { ctx.shadowColor = COLORS.yellow; ctx.shadowBlur = 15 + 70 * brightness; }
+    ctx.fillStyle = `rgba(249,226,175,${0.06 + 0.9 * brightness})`;
+    ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill();
+    ctx.restore();
+    ctx.strokeStyle = brightness > 0.01 ? COLORS.yellow : '#7f849c'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.stroke();
+    line([[x-12,y+14],[x-8,y-6],[x-3,y+6],[x+3,y-6],[x+8,y+6],[x+12,y-6]], brightness > 0.01 ? '#fff' : '#7f849c', 2.5);
+    line([[x,y-r-30],[x,y-r]], COLORS.wire, 4); line([[x,y+r],[x,y+r+30]], COLORS.wire, 4);
+    label('Bec ' + R_BULB + ' Ω', x, y + r + 48, COLORS.text, 13);
+  }
+
+  function spawnSparks(x, y) {
+    for (let i = 0; i < 4; i++) state.sparks.push({x, y, vx:(Math.random()-.5)*340, vy:(Math.random()-.8)*300, life:1});
+  }
+
+  // ===== Nivel 3: editor liber =====
+  const TYPE_NAME = {res:'Rezistor', bulb:'Bec', sw:'Comutator', wire:'Fir', gap:'Întrerupere'};
+  const MAX_SERIES = 3, MAX_BRANCHES = 3, MAX_BRANCH_COMP = 2, KEY = 'circuitMaster.circuit.v1';
+  let uid = 1;
+  const mk = (t, v) => ({id:uid++, t, v: v !== undefined ? v : (t === 'bulb' ? R_BULB : t === 'res' ? 10 : 0), open:false});
+  const PRESETS = {
+    normal: () => ({series:[mk('res', 20), mk('bulb')], branches:[]}),
+    short: () => ({series:[], branches:[[mk('bulb')], [mk('wire')]]}),
+    shunt: () => ({series:[mk('res', 10)], branches:[[mk('bulb')], [mk('wire')]]}),
+    open: () => ({series:[mk('res', 20), mk('gap'), mk('bulb')], branches:[]})
+  };
+  const okComp = c => c && TYPE_NAME[c.t] && Number.isFinite(c.v) && Number.isFinite(c.id);
+  const validCircuit = d => d && Array.isArray(d.series) && d.series.length <= MAX_SERIES && d.series.every(okComp) &&
+    Array.isArray(d.branches) && d.branches.length <= MAX_BRANCHES &&
+    d.branches.every(b => Array.isArray(b) && b.length <= MAX_BRANCH_COMP && b.every(okComp));
+  function saveC() { try { localStorage.setItem(KEY, JSON.stringify(state.c)); } catch (e) {} }
+  function loadC() {
+    try {
+      const d = JSON.parse(localStorage.getItem(KEY));
+      if (validCircuit(d)) { state.c = d; uid = 1 + Math.max(0, ...d.series.concat(...d.branches).map(c => c.id)); }
+    } catch (e) {}
+  }
+  state.c = PRESETS.normal(); state.sel = null; state.target = 'S'; state.lay = null;
+  loadC();
+
+  const compR = c => c.t === 'res' || c.t === 'bulb' ? c.v : c.t === 'wire' ? 0 : c.t === 'sw' ? (c.open ? Infinity : 0) : Infinity;
+  const sumR = list => list.reduce((s, c) => s + compR(c), 0);
+
+  function solve3() {
+    const C = state.c, nB = C.branches.length;
+    const out = {I:0, P:0, brightness:0, branches:[], comp:new Map()};
+    const Rs = sumR(C.series), Rb = C.branches.map(sumR), zero = Rb.filter(r => r === 0).length;
+    let Rp = 0;
+    if (nB > 0 && !zero) { const g = Rb.reduce((s, r) => s + (isFinite(r) ? 1 / r : 0), 0); Rp = g > 0 ? 1 / g : Infinity; }
+    const Rt = Rs + Rp;
+    const info = out.l3 = {Rs, Rp, Rt, Vs:0, Vp:0, nB};
+    if (!state.closed) return out;
+    if (!isFinite(Rt)) { out.msg = {kind:'info', text:'⛔ Circuit deschis — nu circulă curent (I = 0)'}; return out; }
+    if (Rt < 0.001) { out.short = true; out.msg = {kind:'short', text:'⚡ Scurtcircuit! Siguranță declanșată'}; return out; }
+    const I = V / Rt;
+    info.Vs = I * Rs; info.Vp = I * Rp; out.I = I;
+    const per = (c, i) => {
+      const r = compR(c), p = isFinite(r) ? i * i * r : 0, b = c.t === 'bulb' ? Math.min(1, Math.sqrt(p / P_MAX)) : 0;
+      out.comp.set(c.id, {I:i, P:p, b});
+      if (c.t === 'bulb') { out.P += p; out.brightness = Math.max(out.brightness, b); }
+    };
+    C.series.forEach(c => per(c, I));
+    out.branches = C.branches.map((b, j) => {
+      const r = Rb[j], ij = !isFinite(r) ? 0 : r === 0 ? I / zero : info.Vp / r;
+      b.forEach(c => per(c, ij));
+      return ij;
+    });
+    if (nB === 0) out.branches = [I];
+    else if (zero && nB > 1) out.msg = {kind:'warn', text:'↯ Ramură scurtcircuitată — componentele din celelalte ramuri paralele sunt șuntate'};
+    return out;
+  }
+
+  function layout3() {
+    const C = state.c, nS = C.series.length, nB = C.branches.length, items = [], cols = [];
+    const rect = (x, y, vert) => vert ? {x:x - 30, y:y - 52, w:60, h:104} : {x:x - 52, y:y - 30, w:104, h:60};
+    let xLast = 800, xp = L + nS * 120;
+    if (nB === 0) {
+      const step = (800 - L) / Math.max(nS, 1);
+      C.series.forEach((c, i) => { const x = L + (i + 0.5) * step; items.push({c, x, y:T, vert:false, hit:rect(x, T, false)}); });
+      cols.push(800);
+    } else {
+      C.series.forEach((c, i) => { const x = L + (i + 0.5) * 120; items.push({c, x, y:T, vert:false, hit:rect(x, T, false)}); });
+      C.branches.forEach((b, j) => {
+        const x = xp + (830 - xp) * (j + 1) / nB; cols.push(x); xLast = x;
+        b.forEach((c, k) => { const y = T + (k + 1) * (B - T) / (b.length + 1); items.push({c, x, y, vert:true, hit:rect(x, y, true)}); });
+      });
+    }
+    return state.lay = {items, cols, xLast, nB};
+  }
+  function routes3() {
+    const lay = layout3();
+    return lay.cols.map(x => [{x:L, y:B}, {x:L, y:T}, {x, y:T}, {x, y:B}]);
+  }
+
+  function drawWires3(active) {
+    const lay = state.lay, col = active ? '#7f849c' : COLORS.wire;
+    line([[L,B],[L,T],[lay.xLast,T]], col, 4);
+    line([[L,B],[lay.xLast,B]], col, 4);
+    lay.cols.forEach(x => line([[x,T],[x,B]], col, 4));
+    if (lay.nB > 1) { ctx.fillStyle = col; lay.cols.forEach(x => [T, B].forEach(y => { ctx.beginPath(); ctx.arc(x, y, 5, 0, 7); ctx.fill(); })); }
+  }
+
+  function drawComp3(it, ph) {
+    const {c, x, y, vert} = it, d = ph.comp.get(c.id) || {I:0, P:0, b:0};
+    ctx.save(); ctx.translate(x, y); if (vert) ctx.rotate(Math.PI / 2);
+    ctx.fillStyle = COLORS.bg; ctx.fillRect(-52, -30, 104, 60);
+    if (state.sel === c.id) { ctx.strokeStyle = COLORS.blue; ctx.lineWidth = 1.5; ctx.setLineDash([5, 4]); ctx.strokeRect(-52, -30, 104, 60); ctx.setLineDash([]); }
+    if (c.t === 'res') line([[-52,0],[-32,0],[-24,-14],[-12,14],[0,-14],[12,14],[24,-14],[32,0],[52,0]], COLORS.yellow, 4);
+    else if (c.t === 'wire') line([[-52,0],[52,0]], '#cdd6f4', 6);
+    else if (c.t === 'gap') {
+      line([[-52,0],[-20,0]], COLORS.wire, 4); line([[20,0],[52,0]], COLORS.wire, 4);
+      ctx.fillStyle = COLORS.red; [-20, 20].forEach(px => { ctx.beginPath(); ctx.arc(px, 0, 5, 0, 7); ctx.fill(); });
+    } else if (c.t === 'sw') {
+      const a = (c.open ? -28 : 0) * Math.PI / 180;
+      line([[-52,0],[-35,0]], COLORS.wire, 4); line([[35,0],[52,0]], COLORS.wire, 4);
+      ctx.fillStyle = COLORS.blue; [-35, 35].forEach(px => { ctx.beginPath(); ctx.arc(px, 0, 5, 0, 7); ctx.fill(); });
+      line([[-35,0],[-35 + 70 * Math.cos(a), 70 * Math.sin(a)]], c.open ? COLORS.blue : COLORS.yellow, 5);
+    } else {
+      const b = d.b;
+      line([[-52,0],[-24,0]], COLORS.wire, 4); line([[24,0],[52,0]], COLORS.wire, 4);
+      ctx.save();
+      if (b > 0.01) { ctx.shadowColor = COLORS.yellow; ctx.shadowBlur = 12 + 60 * b; }
+      ctx.fillStyle = `rgba(249,226,175,${0.06 + 0.9 * b})`; ctx.beginPath(); ctx.arc(0, 0, 24, 0, 7); ctx.fill();
+      ctx.restore();
+      ctx.strokeStyle = b > 0.01 ? COLORS.yellow : '#7f849c'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(0, 0, 24, 0, 7); ctx.stroke();
+      line([[-10,10],[-6,-5],[-2,5],[2,-5],[6,5],[10,-5]], b > 0.01 ? '#fff' : '#7f849c', 2.5);
+    }
+    ctx.restore();
+    const txt = c.t === 'res' || c.t === 'bulb' ? c.v + ' Ω' : c.t === 'sw' ? (c.open ? 'DESCHIS' : 'ÎNCHIS') : c.t === 'wire' ? 'fir' : 'întrerupt';
+    const col = c.t === 'res' ? COLORS.yellow : c.t === 'gap' ? COLORS.red : COLORS.text;
+    const cur = d.I > 0.0005 ? d.I.toFixed(2) + ' A' : '';
+    if (!vert) { label(txt, x, y - 36, col, 13); if (cur) label(cur, x, y + 50, COLORS.blue, 12); }
+    else { label(txt, x + 34, y - 2, col, 13, 'left'); if (cur) label(cur, x + 34, y + 14, COLORS.blue, 12, 'left'); }
+  }
+
+  function shortSpot() {
+    const w = state.lay && state.lay.items.find(i => i.c.t === 'wire');
+    return w ? {x:w.x, y:w.y} : {x:L, y:T + 30};
+  }
+
+  // Editor
+  const findComp = id => {
+    const C = state.c;
+    for (const list of [C.series, ...C.branches]) { const i = list.findIndex(c => c.id === id); if (i >= 0) return {list, i, c:list[i]}; }
+    return null;
+  };
+  const describe = c => TYPE_NAME[c.t] + (c.t === 'res' || c.t === 'bulb' ? ' ' + c.v + ' Ω' : c.t === 'sw' ? (c.open ? ' (deschis)' : ' (închis)') : '');
+  let noteTimer = 0;
+  function note(text) {
+    $('selBox').textContent = text; clearTimeout(noteTimer);
+    noteTimer = setTimeout(refreshEditor, 2200);
+  }
+  function refreshEditor() {
+    const C = state.c, opts = ['S'].concat(C.branches.map((_, j) => String(j)));
+    if (!opts.includes(String(state.target))) state.target = 'S';
+    $('tgt').innerHTML = opts.map(o => '<option value="' + o + '">' + (o === 'S' ? 'Serie (ramura principală)' : 'Ramura paralelă ' + (+o + 1)) + '</option>').join('');
+    $('tgt').value = String(state.target);
+    const rows = [];
+    C.series.forEach(c => rows.push(['Serie', c]));
+    C.branches.forEach((b, j) => b.forEach(c => rows.push(['R' + (j + 1), c])));
+    $('compList').innerHTML = rows.map(([w, c]) => '<button type="button" data-id="' + c.id + '" class="' + (state.sel === c.id ? 'sel' : '') + '">' + w + ': ' + describe(c) + '</button>').join('') ||
+      '<span style="color:#9399b2;font-size:12px">Circuit gol — sursa e legată direct printr-un fir.</span>';
+    const f = state.sel != null ? findComp(state.sel) : null, box = $('selBox');
+    if (!f) { state.sel = null; box.textContent = 'Selectează o componentă (click pe schemă sau în listă) ca să o modifici.'; return; }
+    const c = f.c;
+    let h = '<b>' + TYPE_NAME[c.t] + ' selectat</b>';
+    if (c.t === 'res' || c.t === 'bulb') h += '<div class="row"><input id="valIn" type="number" aria-label="Valoare în ohmi" min="' + (c.t === 'bulb' ? 1 : 0) + '" max="' + (c.t === 'bulb' ? 100 : 500) + '" step="1" value="' + c.v + '"> Ω</div>';
+    if (c.t === 'sw') h += '<button type="button" id="swTog">' + (c.open ? 'Închide' : 'Deschide') + ' comutatorul</button>';
+    h += '<button type="button" id="delComp">🗑 Șterge componenta</button>';
+    box.innerHTML = h;
+  }
+  function changed() { buildRoutes(); refreshEditor(); refreshStatic(); saveC(); }
+  function addComp(t) {
+    const list = state.target === 'S' ? state.c.series : state.c.branches[+state.target];
+    if (!list) return;
+    if (list.length >= (state.target === 'S' ? MAX_SERIES : MAX_BRANCH_COMP)) { note('Nu mai e loc aici. Alege altă ramură sau șterge o componentă.'); return; }
+    const c = mk(t); list.push(c); state.sel = c.id; changed();
+  }
+  document.querySelector('[data-add]').parentNode.addEventListener('click', e => { const b = e.target.closest('[data-add]'); if (b) addComp(b.dataset.add); });
+  $('tgt').addEventListener('change', () => { state.target = $('tgt').value; });
+  $('addBranch').addEventListener('click', () => {
+    if (state.c.branches.length >= MAX_BRANCHES) { note('Maximum ' + MAX_BRANCHES + ' ramuri paralele.'); return; }
+    state.c.branches.push([mk('bulb')]); state.target = String(state.c.branches.length - 1); changed();
+  });
+  $('delBranch').addEventListener('click', () => {
+    if (state.target === 'S') { note('Alege mai întâi o ramură paralelă în „Adaugă în”.'); return; }
+    state.c.branches.splice(+state.target, 1); state.target = 'S'; state.sel = null; changed();
+  });
+  $('compList').addEventListener('click', e => { const b = e.target.closest('[data-id]'); if (b) { state.sel = +b.dataset.id; refreshEditor(); } });
+  $('selBox').addEventListener('input', e => {
+    if (e.target.id !== 'valIn') return;
+    const f = findComp(state.sel), v = parseFloat(e.target.value);
+    if (!f || !Number.isFinite(v)) return;
+    f.c.v = Math.min(f.c.t === 'bulb' ? 100 : 500, Math.max(f.c.t === 'bulb' ? 1 : 0, v)); saveC();
+  });
+  $('selBox').addEventListener('change', e => { if (e.target.id === 'valIn') refreshEditor(); });
+  $('selBox').addEventListener('click', e => {
+    const f = findComp(state.sel); if (!f) return;
+    if (e.target.id === 'swTog') { f.c.open = !f.c.open; refreshEditor(); saveC(); }
+    if (e.target.id === 'delComp') { f.list.splice(f.i, 1); state.sel = null; changed(); }
+  });
+  document.querySelector('[data-preset]').parentNode.addEventListener('click', e => {
+    const b = e.target.closest('[data-preset]'); if (!b) return;
+    state.c = PRESETS[b.dataset.preset](); state.sel = null; state.target = 'S'; state.closed = true; changed();
+  });
+  const hit3 = (x, y) => state.lay && state.lay.items.find(i => x >= i.hit.x && x <= i.hit.x + i.hit.w && y >= i.hit.y && y <= i.hit.y + i.hit.h);
+
+  let last = performance.now();
+  function frame(now) {
+    const dt = Math.min(0.05, (now - last) / 1000); last = now;
+    const ph = physics();
+    state.tripped = !!ph.short;
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    ctx.save(); ctx.scale(cv.width / 900, cv.height / 520);
+    if (state.level === 3) drawWires3(ph.I > 0); else drawWires(ph.I > 0);
+
+    if (state.level === 3) {
+      state.lay.items.forEach(it => drawComp3(it, ph));
+    } else if (state.level === 1) {
+      drawResistor(COMP.res1.x, COMP.res1.y, false);
+      drawBulb(COMP.bulb1.x, COMP.bulb1.y, ph.brightness);
+    } else {
+      drawResistor(COMP.res2.x, COMP.res2.y, true);
+      drawBulb(COMP.bulb2.x, COMP.bulb2.y, ph.brightness);
+      label('IR = ' + (ph.branches[0] || 0).toFixed(2) + ' A', 580, 468, COLORS.yellow, 13);
+      label('IBec = ' + (ph.branches[1] || 0).toFixed(2) + ' A', 760, 468, COLORS.blue, 13);
+    }
+    drawSource(); drawSwitch();
+
+    // Particule: viteza este proporțională cu curentul pe ramura respectivă
+    state.particles.forEach(p => {
+      const r = state.routes[p.route];
+      const I = state.level === 1 ? ph.I : (ph.branches[p.route] || 0);
+      p.d += I * 28 * dt * (state.level === 2 ? 1 : 1);
+      if (I > 0) {
+        const pt = pointAt(r, p.d);
+        ctx.save(); ctx.shadowColor = p.color; ctx.shadowBlur = 10; ctx.fillStyle = p.color;
+        ctx.beginPath(); ctx.arc(pt.x, pt.y, 4, 0, 7); ctx.fill(); ctx.restore();
+      }
+    });
+
+    if (ph.short) {
+      const at = state.level === 3 ? shortSpot() : state.level === 1 ? COMP.res1 : COMP.res2;
+      spawnSparks(at.x, at.y); spawnSparks(L, T + 30);
+      ctx.fillStyle = 'rgba(243,139,168,.08)'; ctx.fillRect(0, 0, 900, 520);
+    }
+    state.sparks = state.sparks.filter(s => s.life > 0);
+    state.sparks.forEach(s => {
+      s.x += s.vx * dt; s.y += s.vy * dt; s.vy += 500 * dt; s.life -= dt * 2.2;
+      ctx.fillStyle = `rgba(249,226,175,${Math.max(0, s.life)})`;
+      ctx.fillRect(s.x, s.y, 3, 3);
+    });
+    ctx.restore();
+
+    updateUI(ph);
+    if (running) requestAnimationFrame(frame);
+  }
+
+  function updateUI(ph) {
+    $('iOut').textContent = ph.I.toFixed(2);
+    $('pOut').textContent = ph.P.toFixed(1);
+    const b = ph.brightness;
+    const icon = $('bulbIcon');
+    icon.style.background = `rgba(249,226,175,${0.08 + 0.85 * b})`;
+    icon.style.boxShadow = b > 0.01 ? `0 0 ${10 + 40 * b}px ${2 + 8 * b}px rgba(249,226,175,${0.25 + 0.5 * b})` : 'none';
+    icon.style.borderColor = b > 0.01 ? '#f9e2af' : '#313244';
+    const m = ph.msg || (ph.short ? {kind:'short', text:'⚡ Scurtcircuit! Siguranță declanșată'} : null);
+    alertEl.classList.toggle('show', !!m);
+    alertEl.classList.toggle('info', !!m && m.kind === 'info');
+    alertEl.classList.toggle('warn', !!m && m.kind === 'warn');
+    if (m && alertEl.textContent !== m.text) alertEl.textContent = m.text;
+    if (window.__renderLaw) window.__renderLaw(ph);
+  }
+
+  function refreshStatic() {
+    $('rLabel').textContent = state.R + ' Ω';
+    swBtn.classList.toggle('on', state.closed);
+    swBtn.setAttribute('aria-pressed', state.closed);
+    swBtn.textContent = state.closed ? 'Închis — apasă pentru a deschide' : 'Deschis — apasă pentru a închide';
+    $('rGroup').hidden = state.level === 3; $('editor').hidden = state.level !== 3;
+    if (state.level === 1) {
+      $('formula').innerHTML = 'Serie: R<sub>total</sub> = R + ' + R_BULB + ' Ω<br>I = V / R<sub>total</sub><br>P<sub>bec</sub> = I² · ' + R_BULB + ' Ω';
+      $('hint').textContent = 'Nivel 1 — Serie: aceeași curent trece prin rezistor și bec; mărirea rezistenței estompează becul. R = 0 Ω declanșează siguranța.';
+    } else if (state.level === 3) {
+      $('formula').innerHTML = 'Serie: R = R₁ + R₂ + …<br>Paralel: 1/R = 1/R₁ + 1/R₂ + …<br>R<sub>total</sub> = R<sub>serie</sub> + R<sub>paralel</sub><br>I = V / R<sub>total</sub>, P = I²·R';
+      $('hint').textContent = 'Nivel 3 — Editor liber: adaugă componente în serie sau în ramuri paralele, modifică valorile și încearcă scenariile Scurtcircuit / Circuit deschis. Click pe o componentă o selectează; comutatoarele se comută la click.';
+    } else {
+      $('formula').innerHTML = 'Paralel: fiecare ramură are 12 V<br>I<sub>R</sub> = V / R, I<sub>bec</sub> = V / ' + R_BULB + '<br>I<sub>total</sub> = I<sub>R</sub> + I<sub>bec</sub>, P<sub>bec</sub> = V² / ' + R_BULB;
+      $('hint').textContent = 'Nivel 2 — Paralel: becul rămâne la aceeași putere, dar curentul total crește când scazi R. R = 0 Ω scurtcircuitează sursa.';
+    }
+  }
+
+  function setLevel(n) {
+    state.level = n; state.sparks = [];
+    $('lv1').classList.toggle('active', n === 1); $('lv2').classList.toggle('active', n === 2); $('lv3').classList.toggle('active', n === 3);
+    COMP.sw = n === 3 ? {x:240, y:B} : {x:330, y:T};
+    buildRoutes(); routeFix(); refreshStatic();
+    if (n === 3) refreshEditor();
+  }
+  function toggleSwitch() { state.closed = !state.closed; refreshStatic(); }
+
+  slider.addEventListener('input', () => { state.R = +slider.value; refreshStatic(); });
+  swBtn.addEventListener('click', toggleSwitch);
+  $('lv1').addEventListener('click', () => setLevel(1));
+  $('lv2').addEventListener('click', () => setLevel(2));
+  $('lv3').addEventListener('click', () => setLevel(3));
+  const SYM = {
+    V:['V — Tensiunea (volți)','Diferența de potențial dintre două puncte: „împingerea” care mută electronii prin circuit. Aici sursa are 12 V fix.'],
+    I:['I — Intensitatea curentului (amperi)','Cantitatea de sarcină electrică ce trece printr-un punct în fiecare secundă. Viteza particulelor din schemă este proporțională cu I.'],
+    R:['R — Rezistența (ohmi)','Cât se opune un component trecerii curentului. Mai mare R → curent mai mic. O reglezi cu slider-ul (0–50 Ω).'],
+    P:['P — Puterea (wați)','Energia transformată pe secundă. Pentru bec: P = I²·R = V²/R. De ea depinde luminozitatea.'],
+    source:['🔋 Sursa DC (12 V)','Furnizează energia circuitului. Bara lungă este polul + , bara scurtă și groasă este polul − . Curentul convențional iese din +.'],
+    switch:['⎯/⎯ Comutatorul','Închide sau deschide circuitul. Închis: curentul circulă. Deschis: circuit întrerupt, I = 0, becul e stins. Click pe el îl comută.'],
+    resistor:['⌇ Rezistorul','Limitează curentul și transformă energia în căldură. Simbolul în zig-zag; valoarea în Ω este scrisă lângă el.'],
+    bulb:['💡 Becul','Rezistență (6 Ω implicit, editabilă în Nivelul 3) care transformă energia în lumină. Cercul cu filament este simbolul lui; strălucirea crește cu puterea P.'],
+    wire:['⎯ Firul (conductor ideal)','Rezistență 0 Ω. Pus în paralel cu alte componente le „șuntează”: curentul ocolește componentele și, dacă nimic nu limitează curentul, apare scurtcircuit.'],
+    gap:['⎯ ⎯ Întreruperea (fir tăiat)','Un loc unde circuitul e întrerupt: rezistență infinită, deci I = 0 pe acea cale. Un circuit deschis nu are curent și becul rămâne stins.'],
+    ohm:['Ω — Ohm','Unitatea de măsură a rezistenței. 1 Ω = 1 V / 1 A.'],
+    amp:['A — Amper','Unitatea de măsură a curentului. 1 A = 1 coulomb de sarcină pe secundă.'],
+    watt:['W — Watt','Unitatea de măsură a puterii. 1 W = 1 V · 1 A = 1 joule pe secundă.']
+  };
+  function showSym(k) { $('symInfo').innerHTML = '<b>' + SYM[k][0] + '</b><br>' + SYM[k][1]; }
+  $('chips').addEventListener('click', e => { const b = e.target.closest('button'); if (b) showSym(b.dataset.sym); });
+
+  let law = 'ohm', lawCache = '';
+  const f = n => n.toFixed(2);
+  function renderLaw3(ph) {
+    const i = ph.l3, on = state.closed && !ph.short && ph.I > 0;
+    const fr = x => isFinite(x) ? String(+x.toFixed(2)) : '∞';
+    const off = 'Închide comutatorul și asigură un circuit închis pentru valori live.';
+    let h;
+    if (law === 'ohm') {
+      h = 'Curentul este direct proporțional cu tensiunea și invers proporțional cu rezistența.<span class="eq">I = V / R &nbsp; P = I²·R</span>' +
+        '<div class="live">' + (on ? 'R<sub>serie</sub> = ' + fr(i.Rs) + ' Ω, R<sub>paralel</sub> = ' + fr(i.Rp) + ' Ω<br>R<sub>total</sub> = ' + fr(i.Rt) + ' Ω → I = 12 / ' + fr(i.Rt) + ' = ' + f(ph.I) + ' A' : off) + '</div>';
+    } else if (law === 'kcl') {
+      h = 'Suma curenților care intră într-un nod este egală cu suma celor care ies.<span class="eq">Σ I<sub>intrare</sub> = Σ I<sub>ieșire</sub></span>' +
+        '<div class="live">' + (on ? (i.nB > 0 ? 'I = ' + ph.branches.map(f).join(' + ') + ' = ' + f(ph.branches.reduce((a, b) => a + b, 0)) + ' A (suma curenților din ramuri)' : 'Fără ramificații: același curent, ' + f(ph.I) + ' A, trece prin toate componentele.') : off) + '</div>';
+    } else {
+      h = 'Suma algebrică a tensiunilor pe o buclă închisă este zero.<span class="eq">V<sub>sursă</sub> = ΣU<sub>căderi</sub></span>' +
+        '<div class="live">' + (on ? '12 V = U<sub>serie</sub> + U<sub>paralel</sub> = ' + f(i.Vs) + ' + ' + f(i.Vp) + ' = ' + f(i.Vs + i.Vp) + ' V' : off) + '</div>';
+    }
+    if (h !== lawCache) { lawCache = h; $('lawBox').innerHTML = h; }
+  }
+  function renderLaw(ph) {
+    if (state.level === 3) { renderLaw3(ph); return; }
+    const R = state.R, par = state.level === 2, on = state.closed && !ph.short;
+    let h = '';
+    if (law === 'ohm') {
+      h = 'Curentul printr-un conductor este direct proporțional cu tensiunea și invers proporțional cu rezistența.<span class="eq">I = V / R &nbsp; V = I·R &nbsp; P = V·I</span>' +
+        'Dublezi R → curentul se înjumătățește. ' + (par ? 'În paralel, fiecare ramură respectă legea separat.' : 'În serie se folosește R<sub>total</sub> = R + 6 Ω.') +
+        '<div class="live">' + (on ? (par ? 'Ramura rezistor: ' + f(V/R) + ' A = 12 V / ' + R + ' Ω<br>Ramura bec: ' + f(V/R_BULB) + ' A = 12 V / 6 Ω' : 'I = 12 V / ' + (R + R_BULB) + ' Ω = ' + f(ph.I) + ' A') : 'Închide comutatorul (și R > 0) pentru valori live.') + '</div>';
+    } else if (law === 'kcl') {
+      h = 'Legea curenților: suma curenților care intră într-un nod este egală cu suma celor care ies.<span class="eq">Σ I<sub>intrare</sub> = Σ I<sub>ieșire</sub></span>' +
+        (par ? 'Nivelul 2 are noduri unde curentul se desparte în două ramuri.' : 'În serie nu există ramificații: același curent trece prin toate componentele.') +
+        '<div class="live">' + (on ? (par ? 'Nod: I<sub>total</sub> = I<sub>R</sub> + I<sub>bec</sub> = ' + f(ph.branches[0]) + ' + ' + f(ph.branches[1]) + ' = ' + f(ph.I) + ' A' : 'I prin rezistor = I prin bec = ' + f(ph.I) + ' A') : 'Închide comutatorul pentru valori live.') + '</div>';
+    } else {
+      h = 'Legea tensiunilor: suma algebrică a tensiunilor pe orice buclă închisă este zero.<span class="eq">Σ V = 0 &nbsp;→&nbsp; V<sub>sursă</sub> = ΣV<sub>căderi</sub></span>' +
+        '<div class="live">' + (on ? (par ? 'Bucla 1: 12 V = U<sub>R</sub> = ' + f(12) + ' V<br>Bucla 2: 12 V = U<sub>bec</sub> = 12 V' : '12 V = U<sub>R</sub> + U<sub>bec</sub> = ' + f(ph.I * R) + ' + ' + f(ph.I * R_BULB) + ' = ' + f(ph.I * (R + R_BULB)) + ' V') : 'Închide comutatorul pentru valori live.') + '</div>';
+    }
+    if (h !== lawCache) { lawCache = h; $('lawBox').innerHTML = h; }
+  }
+  window.__renderLaw = renderLaw;
+  document.querySelector('.tabs').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    law = b.dataset.law; lawCache = '';
+    document.querySelectorAll('.tabs button').forEach(x => x.classList.toggle('active', x === b));
+  });
+
+  function hit(x, y) {
+    const near = (c, w, h) => Math.abs(x - c.x) < w && Math.abs(y - c.y) < h;
+    if (near(COMP.sw, 70, 45)) return 'switch';
+    if (near(COMP.source, 45, 60)) return 'source';
+    if (state.level === 3) return null;
+    if (state.level === 1 ? near(COMP.res1, 60, 30) : near(COMP.res2, 40, 60)) return 'resistor';
+    if (near(COMP.bulb1, 45, 70)) return 'bulb';
+    return null;
+  }
+  function canvasPos(e) {
+    const rect = cv.getBoundingClientRect();
+    return [(e.clientX - rect.left) * 900 / rect.width, (e.clientY - rect.top) * 520 / rect.height];
+  }
+  cv.addEventListener('click', e => {
+    const [px, py] = canvasPos(e);
+    if (state.level === 3) {
+      const it = hit3(px, py);
+      if (it) {
+        state.sel = it.c.id;
+        if (it.c.t === 'sw') it.c.open = !it.c.open;
+        showSym({res:'resistor', bulb:'bulb', sw:'switch', wire:'wire', gap:'gap'}[it.c.t]);
+        refreshEditor(); saveC();
+        return;
+      }
+    }
+    const k = hit(px, py);
+    if (!k) return;
+    if (k === 'switch') toggleSwitch();
+    showSym(k);
+  });
+
+  let running = false;
+  function startLoop() { if (running) return; running = true; last = performance.now(); requestAnimationFrame(frame); }
+  function stopLoop() { running = false; }
+  document.addEventListener('visibilitychange', () => { if (document.hidden) stopLoop(); else if (!$('game').hidden) startLoop(); });
+
+  function showRules(on) { $('rules').hidden = !on; if (!on) $('playBtn').blur(); else $('playBtn').focus(); }
+  $('infoBtn').addEventListener('click', () => showRules(true));
+  $('playBtn').addEventListener('click', () => showRules(false));
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('rules').hidden) showRules(false); });
+
+  function openGame() {
+    $('consoleScreen').hidden = true; $('game').hidden = false; window.scrollTo(0, 0);
+    showRules(true); startLoop();
+  }
+  $('consoleBtn').addEventListener('click', openGame);
+  $('backBtn').addEventListener('click', () => {
+    stopLoop(); showRules(false);
+    $('game').hidden = true; $('consoleScreen').hidden = false; $('consoleBtn').focus();
+  });
+  if (new URLSearchParams(location.search).has('embed')) {
+    document.body.classList.add('embed');
+    $('backBtn').hidden = true;
+    openGame();
+  }
+  cv.addEventListener('mousemove', e => {
+    const rect = cv.getBoundingClientRect();
+    const [mx, my] = canvasPos(e);
+    cv.style.cursor = (hit(mx, my) || (state.level === 3 && hit3(mx, my))) ? 'pointer' : 'default';
+  });
+
+  setLevel(1);
+})();
+</script>
+</body>
+</html>
