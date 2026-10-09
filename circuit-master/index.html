@@ -151,12 +151,27 @@
       <p><i>Rolul:</i> construiești singur orice circuit (serie, paralel sau mixt) și vezi cum se comportă, cu valori calculate live și legile Ohm și Kirchhoff aplicate pe circuitul tău.</p>
       <p><i>Cum se joacă:</i></p>
       <ul>
-        <li>Din „Paleta de componente” adaugi câte vrei (max. 40): rezistor, reostat, bec, LED, motor, încălzitor, siguranță fuzibilă, comutator și buton (care conduce doar cât îl ții apăsat). Apasă un buton sau trage-l pe schemă; poți alege numărul și valoarea. Firele se pot muta trăgându-le.</li>
+        <li>Din „Paleta de componente” adaugi câte vrei (max. 40): rezistor, reostat, bec, LED, motor, încălzitor, siguranță fuzibilă, comutator, întrerupător (I/O, rămâne în poziție) și buton (care conduce doar cât îl ții apăsat). Apasă un buton sau trage-l pe schemă; poți alege numărul și valoarea. Firele se pot muta trăgându-le.</li>
         <li>Trage componentele cu mouse-ul ca să le muți.</li>
         <li>Leagă-le cu fire: trage de la un cerc albastru al unei componente la cercul alteia (sau click pe un cerc, apoi pe celălalt). Un circuit funcționează doar dacă formează o buclă închisă de la + la − al sursei.</li>
         <li>Click pe o componentă sau pe un fir îl selectează: poți schimba valoarea în Ω, comuta comutatorul, roti (tasta R) sau șterge (Del).</li>
         <li>Pornește sursa din butonul „Comutator” din panou. Comutatoarele de pe schemă se deschid/închid la click.</li>
         <li>Scenariile gata făcute (Serie, Paralel, Scurtcircuit, Bec șuntat, Circuit deschis, Gol) te ajută să vezi cazurile tipice. Un fir pus direct între + și − provoacă scurtcircuit; un fir pus peste un bec îl „șuntează” și îl stinge.</li>
+      </ul>
+      <p><i>Componentele și rolul lor:</i></p>
+      <ul>
+        <li>🔋 <b>Sursa DC (12 V)</b> — furnizează energia; fixă, poate fi mutată și rotită. Fără ea nu circulă curent.</li>
+        <li>▭ <b>Rezistorul</b> — limitează curentul (I = V/R) și transformă energia în căldură. Valoare reglabilă 0–500 Ω.</li>
+        <li>🎚️ <b>Reostatul</b> — rezistor variabil (1–500 Ω): îl folosești ca să reglezi curentul sau luminozitatea altor componente.</li>
+        <li>💡 <b>Becul</b> — consumator (6 Ω implicit) care transformă energia în lumină; strălucește mai tare când puterea P = I²·R crește.</li>
+        <li>🟢 <b>LED-ul</b> — sursă de lumină eficientă, cu rezistență mare (60 Ω): luminează verde la curenți mici.</li>
+        <li>⚙️ <b>Motorul</b> — transformă energia electrică în mișcare (8 Ω); elicea se rotește mai repede la curent mai mare.</li>
+        <li>🔥 <b>Încălzitorul</b> — transformă energia în căldură (efectul Joule, 30 Ω); se înroșește pe măsură ce puterea crește.</li>
+        <li>🧯 <b>Siguranța fuzibilă</b> — protecție: dacă curentul depășește valoarea ei (în A), arde și întrerupe circuitul. O înlocuiești din panou după ce o selectezi.</li>
+        <li>⏻ <b>Comutatorul</b> — deschide/închide circuitul la click și rămâne în poziție (deschis = I = 0).</li>
+        <li>🔲 <b>Întrerupătorul (I/O)</b> — ca cel din casă: pornit (I) sau oprit (O). Pus în serie sau pe o ramură paralelă, controlezi separat acea parte a circuitului.</li>
+        <li>🔘 <b>Butonul</b> — conduce doar cât timp îl ții apăsat; la eliberare circuitul se întrerupe.</li>
+        <li>⎯ <b>Firul</b> — conductor ideal care leagă pinii; îl poți muta și modifica. Pus peste o componentă o „șuntează”, iar între + și − provoacă scurtcircuit.</li>
       </ul>
     </div>
     <h3>⚡ Fizica</h3>
@@ -194,6 +209,7 @@
         <button type="button" draggable="true" data-add="heater">🔥 Încălzitor</button>
         <button type="button" draggable="true" data-add="fuse">🧯 Siguranță</button>
         <button type="button" draggable="true" data-add="sw">⏻ Comutator</button>
+        <button type="button" draggable="true" data-add="tog">🔲 Întrerupător</button>
         <button type="button" draggable="true" data-add="btn">🔘 Buton</button>
       </div>
       <div class="addrow" style="align-items:center;color:#9399b2;font-size:13px">
@@ -411,12 +427,12 @@
   }
 
   // ===== Nivel 3: editor liber (plasezi componente și le legi cu fire) =====
-  const TYPE_NAME = {src:'Sursă', res:'Rezistor', pot:'Reostat', bulb:'Bec', led:'LED', motor:'Motor', heater:'Încălzitor', fuse:'Siguranță', sw:'Comutator', btn:'Buton'};
-  const SYM_OF = {src:'source', res:'resistor', pot:'pot', bulb:'bulb', led:'led', motor:'motor', heater:'heater', fuse:'fuse', sw:'switch', btn:'btn'};
+  const TYPE_NAME = {src:'Sursă', res:'Rezistor', pot:'Reostat', bulb:'Bec', led:'LED', motor:'Motor', heater:'Încălzitor', fuse:'Siguranță', sw:'Comutator', tog:'Întrerupător', btn:'Buton'};
+  const SYM_OF = {src:'source', res:'resistor', pot:'pot', bulb:'bulb', led:'led', motor:'motor', heater:'heater', fuse:'fuse', sw:'switch', tog:'tog', btn:'btn'};
   // Componente cu rezistență (consumatori), cu valoarea implicită și puterea la care ating luminozitatea maximă
   const LOADS = {res:{v:10}, pot:{v:25}, bulb:{v:R_BULB, pm:P_MAX}, led:{v:60, pm:2}, motor:{v:8}, heater:{v:30, pm:12}};
-  const isLoad = c => !!LOADS[c.t], isSwitch = c => c.t === 'sw' || c.t === 'btn';
-  const DEFV = {res:10, pot:25, bulb:R_BULB, led:60, motor:8, heater:30, fuse:2, sw:0, btn:0, src:V};
+  const isLoad = c => !!LOADS[c.t], isSwitch = c => c.t === 'sw' || c.t === 'btn' || c.t === 'tog';
+  const DEFV = {res:10, pot:25, bulb:R_BULB, led:60, motor:8, heater:30, fuse:2, sw:0, tog:0, btn:0, src:V};
   const RNG = t => t === 'bulb' ? [1, 100] : t === 'fuse' ? [1, 20] : t === 'res' ? [0, 500] : [1, 500];
   const hasVal = c => isLoad(c) || c.t === 'fuse';
   const unitOf = c => c.t === 'fuse' ? ' A' : ' Ω';
@@ -677,6 +693,17 @@
       ctx.strokeStyle = c.blown ? COLORS.red : COLORS.yellow; ctx.lineWidth = 3; ctx.strokeRect(-24, -9, 48, 18);
       if (c.blown) { line([[-24,0],[-6,0]], COLORS.red, 2); line([[6,0],[24,0]], COLORS.red, 2); line([[-4,-6],[4,6]], COLORS.red, 2); }
       else line([[-24,0],[24,0]], COLORS.yellow, 2);
+    } else if (c.t === 'tog') {
+      line([[-40,0],[-24,0]], COLORS.wire, 4); line([[24,0],[40,0]], COLORS.wire, 4);
+      const on = !c.open;
+      ctx.fillStyle = '#313244'; ctx.strokeStyle = on ? COLORS.yellow : '#7f849c'; ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.roundRect(-24, -16, 48, 32, 6); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = on ? COLORS.yellow : '#585b70';
+      ctx.beginPath(); ctx.roundRect(on ? 0 : -22, -13, 22, 26, 4); ctx.fill();
+      ctx.fillStyle = COLORS.bg; ctx.font = 'bold 12px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.save(); if (vert) { ctx.translate(on ? 11 : -11, 0); ctx.rotate(-Math.PI / 2); ctx.fillText(on ? 'I' : 'O', 0, 0); } else ctx.fillText(on ? 'I' : 'O', on ? 11 : -11, 1);
+      ctx.restore();
+      ctx.fillStyle = COLORS.blue; [-24, 24].forEach(px => { ctx.beginPath(); ctx.arc(px, 0, 3.5, 0, 7); ctx.fill(); });
     } else if (c.t === 'btn') {
       line([[-40,0],[-26,0]], COLORS.wire, 4); line([[26,0],[40,0]], COLORS.wire, 4);
       ctx.fillStyle = COLORS.blue; [-26, 26].forEach(px => { ctx.beginPath(); ctx.arc(px, 0, 4, 0, 7); ctx.fill(); });
@@ -775,7 +802,7 @@
       if (hasVal(c)) h += '<div class="row"><input id="valIn" type="number" aria-label="Valoare" min="' + RNG(c.t)[0] + '" max="' + RNG(c.t)[1] + '" step="' + (c.t === 'fuse' ? '0.5' : '1') + '" value="' + c.v + '">' + unitOf(c) + '</div>';
       if (c.t === 'fuse' && c.blown) h += '<button type="button" id="fuseFix">🧯 Înlocuiește siguranța</button>';
       if (c.t === 'btn') h += '<div style="color:#9399b2">Ține apăsat pe el pe schemă: conduce doar cât timp îl apeși.</div>';
-      if (c.t === 'sw') h += '<button type="button" id="swTog">' + (c.open ? 'Închide' : 'Deschide') + ' comutatorul</button>';
+      if (c.t === 'sw' || c.t === 'tog') h += '<button type="button" id="swTog">' + (c.open ? 'Închide' : 'Deschide') + (c.t === 'tog' ? ' întrerupătorul' : ' comutatorul') + '</button>';
       if (c.t === 'src') h += '<div style="color:#9399b2">Sursă fixă de 12 V — poate fi mutată și rotită.</div>';
       h += '<button type="button" id="rotSel">⟳ Rotește (R)</button>';
       if (c.t !== 'src') h += '<button type="button" id="delSel">🗑 Șterge (Del)</button>';
@@ -954,7 +981,7 @@
     if (d) {
       const c = partById(d.id);
       if (c && d.moved) state.c.wires.forEach(w => { if (w.a[0] === c.id || w.b[0] === c.id) w.pts = null; });
-      if (c && !d.moved && c.t === 'sw') c.open = !c.open;
+      if (c && !d.moved && (c.t === 'sw' || c.t === 'tog')) c.open = !c.open;
       state.drag = null; changed();
     }
   }
@@ -1085,6 +1112,7 @@
     motor:['⚙️ Motorul','Transformă energia electrică în mișcare. Aici e modelat ca o rezistență de 8 Ω; cu cât curentul I e mai mare, cu atât se rotește mai repede.'],
     heater:['🔥 Încălzitorul','Rezistență mare care transformă energia în căldură (efectul Joule: P = I²·R). Se înroșește/luminează portocaliu pe măsură ce puterea crește.'],
     fuse:['🧯 Siguranța fuzibilă','Protejează circuitul: conduce normal, dar dacă curentul depășește valoarea ei (în A) „arde” și întrerupe circuitul. O poți înlocui din panou după ce o selectezi.'],
+    tog:['🔲 Întrerupătorul (I / O)','Ca întrerupătorul din casă: un click îl pornește (I = închis, curentul trece) sau îl oprește (O = deschis, circuit întrerupt) și rămâne în poziție. Îl poți pune în serie pe un consumator sau pe o ramură paralelă ca s-o controlezi separat.'],
     btn:['🔘 Butonul (momentan)','Conduce doar cât timp îl ții apăsat cu mouse-ul; când îl eliberezi, circuitul se întrerupe. Spre deosebire de comutator, nu rămâne în poziție.'],
     wire:['⎯ Firul (conductor ideal)','Rezistență 0 Ω. Pus în paralel cu alte componente le „șuntează”: curentul ocolește componentele și, dacă nimic nu limitează curentul, apare scurtcircuit.'],
     gap:['⎯ ⎯ Întreruperea (fir tăiat)','Un loc unde circuitul e întrerupt: rezistență infinită, deci I = 0 pe acea cale. Un circuit deschis nu are curent și becul rămâne stins.'],
