@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 280" fill="none" role="img">
+  <title>Flux de lucru VoltConsum</title>
+  <desc>Aparate și date de intrare, calcul energetic, apoi indicatori și grafice.</desc>
+  <rect width="720" height="280" rx="22" fill="#0a1511"/>
+  <path d="M30 34h660v212H30z" stroke="#22352a"/>
+  <rect x="58" y="70" width="155" height="145" rx="14" fill="#111f18" stroke="#334a34"/>
+  <rect x="83" y="94" width="43" height="60" rx="6" fill="#1e3022" stroke="#88c957" stroke-width="2"/>
+  <path d="M96 105h17M96 116h17M96 127h17M95 164h47M95 175h73" stroke="#a7cf84" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="178" cy="107" r="13" fill="#c6ff68"/>
+  <path d="m178 99-7 11h6l-1 7 8-12h-6z" fill="#0a1511"/>
+  <path d="M230 142h58m-13-13 13 13-13 13" stroke="#c6ff68" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="302" y="70" width="155" height="145" rx="14" fill="#111f18" stroke="#334a34"/>
+  <circle cx="379" cy="133" r="34" stroke="#334a34" stroke-width="12"/>
+  <path d="M379 99a34 34 0 0 1 33 42" stroke="#c6ff68" stroke-width="12" stroke-linecap="round"/>
+  <path d="M361 181h36M368 190h22" stroke="#91ab84" stroke-width="4" stroke-linecap="round"/>
+  <path d="M474 142h58m-13-13 13 13-13 13" stroke="#c6ff68" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="546" y="70" width="116" height="145" rx="14" fill="#111f18" stroke="#334a34"/>
+  <path d="M568 178v-28l19-15 17 10 25-33" stroke="#c6ff68" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M568 187h72M568 104h72" stroke="#314438" stroke-width="2" stroke-linecap="round"/>
+  <circle cx="568" cy="178" r="4" fill="#c6ff68"/>
+  <circle cx="604" cy="145" r="4" fill="#c6ff68"/>
+  <circle cx="629" cy="112" r="4" fill="#c6ff68"/>
+</svg>

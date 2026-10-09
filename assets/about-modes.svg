@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 300" fill="none" role="img">
+  <title>Moduri de funcționare</title>
+  <desc>Două panouri: indicatori simpli și un grafic suplimentar de tensiune și curent.</desc>
+  <rect width="560" height="300" rx="22" fill="#0a1511"/>
+  <rect x="24" y="32" width="238" height="236" rx="16" fill="#111f18" stroke="#334a34"/>
+  <rect x="298" y="32" width="238" height="236" rx="16" fill="#111f18" stroke="#334a34"/>
+  <circle cx="56" cy="67" r="12" fill="#243a25"/>
+  <path d="M56 59v16m-8-8h16" stroke="#c6ff68" stroke-width="3" stroke-linecap="round"/>
+  <rect x="43" y="96" width="88" height="58" rx="9" fill="#1a2a20" stroke="#35513a"/>
+  <rect x="151" y="96" width="88" height="58" rx="9" fill="#1a2a20" stroke="#35513a"/>
+  <path d="M57 131h14m-14 8h40M165 131h14m-14 8h48" stroke="#92aa8c" stroke-width="3" stroke-linecap="round"/>
+  <path d="M57 116h27M165 116h29" stroke="#c6ff68" stroke-width="5" stroke-linecap="round"/>
+  <rect x="43" y="172" width="196" height="67" rx="9" fill="#17251c" stroke="#304532"/>
+  <path d="M60 220h158M60 188v32" stroke="#35473a" stroke-width="2"/>
+  <path d="m63 211 24-8 22 5 24-17 22 11 25-19 31 8" stroke="#c6ff68" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="330" cy="67" r="12" fill="#263521"/>
+  <path d="M330 58v18m-9-9h18m-15-6 12 12m0-12-12 12" stroke="#c6ff68" stroke-width="2" stroke-linecap="round"/>
+  <rect x="317" y="96" width="200" height="143" rx="9" fill="#17251c" stroke="#304532"/>
+  <path d="M333 218h168M333 121v97" stroke="#35473a" stroke-width="2"/>
+  <path d="M334 176h166M334 145h166M334 205h166" stroke="#26392d" stroke-width="1"/>
+  <path d="M337 207c16-4 20-69 38-69s24 67 40 67 22-65 39-65 24 57 45 57" stroke="#c6ff68" stroke-width="3" stroke-linecap="round"/>
+  <path d="M337 160c17 0 22 28 39 28s22-49 39-49 23 48 40 48 24-34 44-34" stroke="#7dc6f2" stroke-width="3" stroke-linecap="round"/>
+</svg>
