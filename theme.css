@@ -227,6 +227,7 @@ html[data-theme="light"] .background-photo-credit a{color:#41651e}
 
 .metric-card,
 .main-content .panel,
+.about-map-card,
 .guide-card,
 .news-card,
 .electrician-source-card,
@@ -242,6 +243,7 @@ html[data-theme="light"] .background-photo-credit a{color:#41651e}
 }
 .metric-card:hover,
 .main-content .panel:hover,
+.about-map-card:hover,
 .guide-card:hover,
 .news-card:hover,
 .electrician-source-card:hover,
@@ -249,6 +251,7 @@ html[data-theme="light"] .background-photo-credit a{color:#41651e}
 .savings-section:hover,
 .metric-card:focus-within,
 .main-content .panel:focus-within,
+.about-map-card:focus-within,
 .guide-card:focus-within,
 .news-card:focus-within,
 .electrician-source-card:focus-within{
@@ -256,6 +259,7 @@ html[data-theme="light"] .background-photo-credit a{color:#41651e}
   box-shadow:0 12px 32px rgba(0,0,0,.24),0 0 20px rgba(198,255,104,.1),inset 0 1px 0 rgba(255,255,255,.12);
 }
 .metric-card:hover,
+.about-map-card:hover,
 .guide-card:hover,
 .news-card:hover,
 .electrician-source-card:hover{
@@ -269,6 +273,7 @@ html[data-theme="light"] .background-photo-credit a{color:#41651e}
 .chart-data-note,.solar-estimate-note{color:#b0bdb2}
 html[data-theme="light"] .metric-card,
 html[data-theme="light"] .main-content .panel,
+html[data-theme="light"] .about-map-card,
 html[data-theme="light"] .guide-card,
 html[data-theme="light"] .news-card,
 html[data-theme="light"] .electrician-source-card,
@@ -280,6 +285,7 @@ html[data-theme="light"] .savings-section{
 }
 html[data-theme="light"] .metric-card:hover,
 html[data-theme="light"] .main-content .panel:hover,
+html[data-theme="light"] .about-map-card:hover,
 html[data-theme="light"] .guide-card:hover,
 html[data-theme="light"] .news-card:hover,
 html[data-theme="light"] .electrician-source-card:hover,
@@ -287,6 +293,7 @@ html[data-theme="light"] .calculators-directory:hover,
 html[data-theme="light"] .savings-section:hover,
 html[data-theme="light"] .metric-card:focus-within,
 html[data-theme="light"] .main-content .panel:focus-within,
+html[data-theme="light"] .about-map-card:focus-within,
 html[data-theme="light"] .guide-card:focus-within,
 html[data-theme="light"] .news-card:focus-within,
 html[data-theme="light"] .electrician-source-card:focus-within{
@@ -470,6 +477,7 @@ html[data-theme="light"] #protected-app .topbar{
 
 html[data-theme="light"] #protected-app .metric-card,
 html[data-theme="light"] #protected-app .panel,
+html[data-theme="light"] #protected-app .about-map-card,
 html[data-theme="light"] #protected-app .guide-card,
 html[data-theme="light"] #protected-app .news-card,
 html[data-theme="light"] #protected-app .electrician-source-card,
@@ -485,6 +493,7 @@ html[data-theme="light"] #protected-app .savings-section{
 
 html[data-theme="light"] #protected-app .metric-card:hover,
 html[data-theme="light"] #protected-app .panel:hover,
+html[data-theme="light"] #protected-app .about-map-card:hover,
 html[data-theme="light"] #protected-app .guide-card:hover,
 html[data-theme="light"] #protected-app .news-card:hover,
 html[data-theme="light"] #protected-app .electrician-source-card:hover,
@@ -492,6 +501,7 @@ html[data-theme="light"] #protected-app .calculators-directory:hover,
 html[data-theme="light"] #protected-app .savings-section:hover,
 html[data-theme="light"] #protected-app .metric-card:focus-within,
 html[data-theme="light"] #protected-app .panel:focus-within,
+html[data-theme="light"] #protected-app .about-map-card:focus-within,
 html[data-theme="light"] #protected-app .guide-card:focus-within,
 html[data-theme="light"] #protected-app .news-card:focus-within,
 html[data-theme="light"] #protected-app .electrician-source-card:focus-within{
@@ -560,6 +570,7 @@ html[data-theme="light"] #protected-app .topbar{
 
 html[data-theme="light"] #protected-app .metric-card,
 html[data-theme="light"] #protected-app .panel,
+html[data-theme="light"] #protected-app .about-map-card,
 html[data-theme="light"] #protected-app .guide-card,
 html[data-theme="light"] #protected-app .news-card,
 html[data-theme="light"] #protected-app .electrician-source-card,
@@ -575,6 +586,7 @@ html[data-theme="light"] #protected-app .savings-section{
 
 html[data-theme="light"] #protected-app .metric-card:hover,
 html[data-theme="light"] #protected-app .panel:hover,
+html[data-theme="light"] #protected-app .about-map-card:hover,
 html[data-theme="light"] #protected-app .guide-card:hover,
 html[data-theme="light"] #protected-app .news-card:hover,
 html[data-theme="light"] #protected-app .electrician-source-card:hover,
@@ -582,6 +594,7 @@ html[data-theme="light"] #protected-app .calculators-directory:hover,
 html[data-theme="light"] #protected-app .savings-section:hover,
 html[data-theme="light"] #protected-app .metric-card:focus-within,
 html[data-theme="light"] #protected-app .panel:focus-within,
+html[data-theme="light"] #protected-app .about-map-card:focus-within,
 html[data-theme="light"] #protected-app .guide-card:focus-within,
 html[data-theme="light"] #protected-app .news-card:focus-within,
 html[data-theme="light"] #protected-app .electrician-source-card:focus-within{
